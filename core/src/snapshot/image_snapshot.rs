@@ -151,9 +151,8 @@ impl ImageSnapshot {
     /// is PNG, if you want a SVG code snapshot, you can use this method to convert the PNG to SVG
     ///
     /// WARNING: This method is not really convert the PNG to SVG, it encode PNG to Base64 and
-    /// format it to SVG, so the SVG file is still a image file, not a real SVG file. And the
-    /// encoding process will take some time, which depends on the size of the PNG image, if
-    /// the PNG image is too large, the encoding process will take a long time.
+    /// format it to SVG, so the SVG file is still a image file, not a real SVG file. Base64
+    /// usually takes about 33% more space than the original data, so the SVG file size might be larger.
     pub fn to_svg(&mut self) -> Result<&Self, anyhow::Error> {
         let png_data = self.pixmap.encode_png()?;
         let encoded_base64_png_data = STANDARD.encode(png_data);
