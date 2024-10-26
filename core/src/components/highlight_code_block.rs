@@ -1,13 +1,22 @@
-use super::interface::{component::Component, style::ComponentStyle};
-use tiny_skia::{Color, Paint, Rect, Transform};
+use crate::{
+    config::HighlightLine,
+    edges::{edge::Edge, padding::Padding},
+    utils::color::RgbaColor,
+};
+
+use super::interface::{
+    component::{Component, RenderParams},
+    style::ComponentStyle,
+};
+use tiny_skia::{Paint, Rect, Transform};
 
 #[derive(Default)]
 pub struct HighlightCodeBlock {
     children: Vec<Box<dyn Component>>,
+    highlight_lines: Vec<HighlightLine>,
     line_height: f32,
-    start_line_number: usize,
-    end_line_number: usize,
-    render_condition: bool,
+    editor_padding: Padding,
+    code_line_count: usize,
 }
 
 impl Component for HighlightCodeBlock {
@@ -16,7 +25,7 @@ impl Component for HighlightCodeBlock {
     }
 
     fn render_condition(&self) -> bool {
-        self.render_condition
+        self.highlight_lines.len() > 0
     }
 
     fn draw_self(
@@ -27,47 +36,85 @@ impl Component for HighlightCodeBlock {
         _style: &super::interface::style::ComponentStyle,
         parent_style: &ComponentStyle,
     ) -> super::interface::render_error::Result<()> {
-        let mut paint = Paint::default();
-        let start_y_offset = (self.start_line_number - 1) as f32 * self.line_height;
+        for highlight_line in &self.highlight_lines {
+            let (start_line_number, end_line_number, color) = match highlight_line {
+                HighlightLine::Single(line_number, color) => (line_number, line_number, color),
+                HighlightLine::Range(start_line_number, end_line_number, color) => {
+                    (start_line_number, end_line_number, color)
+                }
+            };
+            let (rect, paint) = self.draw_highlight_line(
+                render_params,
+                parent_style,
+                *start_line_number,
+                *end_line_number,
+                color,
+            );
 
-        paint.anti_alias = false;
-        paint.set_color(Color::from_rgba8(255, 255, 255, 10));
-        pixmap.fill_rect(
-            Rect::from_xywh(
-                render_params.x - 20.,
-                render_params.y + start_y_offset,
-                parent_style.width + 20. * 2.,
-                (self.end_line_number - self.start_line_number + 1) as f32 * self.line_height,
-            )
-            .unwrap(),
-            &paint,
-            Transform::from_scale(context.scale_factor, context.scale_factor),
-            None,
-        );
+            pixmap.fill_rect(
+                rect,
+                &paint,
+                Transform::from_scale(context.scale_factor, context.scale_factor),
+                None,
+            );
+        }
 
         Ok(())
     }
 }
 
 impl HighlightCodeBlock {
-    pub fn from_line_number(
-        start_line_number: Option<usize>,
-        end_line_number: Option<usize>,
+    pub fn from(
+        highlight_lines: Vec<HighlightLine>,
+        code_line_count: usize,
         line_height: f32,
+        editor_padding: Padding,
     ) -> HighlightCodeBlock {
-        if end_line_number < start_line_number {
-            panic!("end_line_number should be greater than start_line_number")
+        HighlightCodeBlock {
+            children: vec![],
+            code_line_count,
+            highlight_lines,
+            line_height,
+            editor_padding,
+        }
+    }
+
+    fn draw_highlight_line(
+        &self,
+        render_params: &RenderParams,
+        parent_style: &ComponentStyle,
+        start_line_number: u32,
+        end_line_number: u32,
+        hex: &str,
+    ) -> (Rect, Paint) {
+        // If the start_line_number is greater than end_line_number, swap them
+        if start_line_number > end_line_number {
+            return self.draw_highlight_line(
+                render_params,
+                parent_style,
+                end_line_number,
+                start_line_number,
+                hex,
+            );
         }
 
-        match start_line_number {
-            Some(start_line_number) => HighlightCodeBlock {
-                render_condition: true,
-                children: vec![],
-                line_height,
-                start_line_number,
-                end_line_number: end_line_number.unwrap(),
-            },
-            None => HighlightCodeBlock::default(),
-        }
+        let end_line_number = end_line_number.min(self.code_line_count as u32);
+        let mut paint = Paint::default();
+        // If the start line number is start at n, the y offset should be (n - 1) * line_height
+        let start_y_offset = (start_line_number - 1) as f32 * self.line_height;
+        let rect = Rect::from_xywh(
+            render_params.x - self.editor_padding.left,
+            render_params.y + start_y_offset,
+            parent_style.width + self.editor_padding.horizontal(),
+            // If end_line_number is equal to start_line_number, the height should be line_height
+            (end_line_number - start_line_number + 1) as f32 * self.line_height,
+        )
+        .unwrap();
+        let color: RgbaColor = hex.into();
+
+        paint.set_color(color.into());
+        paint.anti_alias = false;
+
+        (rect, paint)
     }
 }

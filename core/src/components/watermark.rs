@@ -1,7 +1,11 @@
 use cosmic_text::{Align, Attrs, Family};
 use tiny_skia::Pixmap;
 
-use crate::{edges::margin::Margin, utils::text::FontRenderer};
+use crate::{
+    config,
+    edges::margin::Margin,
+    utils::{color::parse_hex_to_cosmic_color, text::FontRenderer},
+};
 
 use super::interface::{
     component::{Component, ComponentContext, RenderParams},
@@ -11,7 +15,7 @@ use super::interface::{
 
 pub struct Watermark {
     children: Vec<Box<dyn Component>>,
-    value: Option<String>,
+    config: Option<config::Watermark>,
 }
 
 impl Component for Watermark {
@@ -23,11 +27,10 @@ impl Component for Watermark {
         _style: &ComponentStyle,
         _parent_style: &ComponentStyle,
     ) -> render_error::Result<()> {
-        let params = &context.take_snapshot_params;
-
-        let attrs = Attrs::new().family(Family::Name(
-            &context.take_snapshot_params.watermark_font_family,
-        ));
+        let config = self.config.clone().unwrap();
+        let attrs = Attrs::new()
+            .color(parse_hex_to_cosmic_color(&config.color))
+            .family(Family::Name(&config.font_family));
 
         FontRenderer::new(
             20.,
@@ -40,7 +43,7 @@ impl Component for Watermark {
             render_params.y,
             pixmap.width() as f32,
             pixmap.height() as f32,
-            &params.watermark.clone().unwrap(),
+            &config.content,
             attrs,
             Some(Align::Center),
             pixmap,
@@ -54,13 +57,13 @@ impl Component for Watermark {
     }
 
     fn render_condition(&self) -> bool {
-        self.value.is_some()
+        self.config.is_some()
     }
 
     fn style(&self) -> RawComponentStyle {
         let default_style = RawComponentStyle::default();
 
-        match &self.value {
+        match &self.config {
             Some(_) => default_style.margin(Margin {
                 bottom: 22.,
                 top: 50.,
@@ -72,10 +75,10 @@ impl Component for Watermark {
 }
 
 impl Watermark {
-    pub fn new(value: Option<String>) -> Watermark {
+    pub fn new(config: Option<config::Watermark>) -> Watermark {
         Watermark {
             children: vec![],
-            value,
+            config,
         }
     }
 }

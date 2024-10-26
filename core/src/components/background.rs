@@ -57,27 +57,21 @@ impl Component for Background {
         let params = &context.take_snapshot_params;
 
         paint.anti_alias = false;
-        match params.bg_color.as_ref() {
-            Some(color) => {
-                if !is_valid_hex_color(color) {
-                    return Err(RenderError::InvalidHexColor(color.to_string()));
-                }
 
-                let rgba_color: RgbaColor = color.to_string().into();
+        if is_valid_hex_color(&params.background) {
+            let rgba_color: RgbaColor = params.background.as_str().into();
 
-                paint.set_color(rgba_color.color);
-            }
-            None => {
-                paint.shader = LinearGradient::new(
-                    Point::from_xy(0., 0.),
-                    Point::from_xy(w, 0.),
-                    Background::get_theme(&context.take_snapshot_params.bg_theme)?,
-                    SpreadMode::Pad,
-                    Transform::identity(),
-                )
-                .unwrap();
-            }
-        };
+            paint.set_color(rgba_color.into());
+        } else {
+            paint.shader = LinearGradient::new(
+                Point::from_xy(0., 0.),
+                Point::from_xy(w, 0.),
+                Background::get_theme(&params.background)?,
+                SpreadMode::Pad,
+                Transform::identity(),
+            )
+            .unwrap();
+        }
 
         pixmap.fill_rect(
             Rect::from_xywh(0., 0., w, h).unwrap(),

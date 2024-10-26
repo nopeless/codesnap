@@ -1,8 +1,11 @@
 use std::sync::Arc;
 
 use crate::{
-    config::{SnapshotConfig, VIEW_WATERMARK_PADDING},
-    utils::{clipboard::Clipboard, path::parse_file_name, theme_provider::ThemeProvider},
+    config::{SnapshotConfig, DEFAULT_WINDOW_MARGIN},
+    utils::{
+        clipboard::Clipboard, color::RgbaColor, path::parse_file_name,
+        theme_provider::ThemeProvider,
+    },
 };
 use anyhow::bail;
 use arboard::ImageData;
@@ -26,18 +29,17 @@ use crate::{
 };
 use base64::{engine::general_purpose::STANDARD, Engine as _};
 
-use super::snapshot::Snapshot;
-
 const LINE_HEIGHT: f32 = 18.;
+const DEFAULT_WINDOW_MIN_WIDTH: f32 = 350.;
 
 pub struct ImageSnapshot {
     pixmap: Pixmap,
     svg_content: Option<String>,
 }
 
-impl Snapshot for ImageSnapshot {
+impl ImageSnapshot {
     /// Copy the code snapshot to the clipboard
-    fn copy(&self) -> anyhow::Result<()> {
+    pub fn copy(&self) -> anyhow::Result<()> {
         let mut clipboard = Clipboard::new()?;
 
         match &self.svg_content {
@@ -59,7 +61,7 @@ impl Snapshot for ImageSnapshot {
 
     /// Save the code snapshot to disk as PNG, please make sure you have set the `save_png`
     /// before calling this method
-    fn save(&self, save_path: &str) -> anyhow::Result<()> {
+    pub fn save(&self, save_path: &str) -> anyhow::Result<()> {
         if !save_path.ends_with(".png") || !save_path.ends_with(".svg") {
             bail!("The save_path must ends with .png or .svg");
         }
@@ -71,13 +73,13 @@ impl Snapshot for ImageSnapshot {
         Ok(())
     }
 
-    fn from_config(config: SnapshotConfig) -> anyhow::Result<Self> {
+    pub fn from_config(config: SnapshotConfig) -> anyhow::Result<Self> {
         let theme_provider = ThemeProvider::from(
             config.themes_folder.clone(),
-            &config.theme,
-            config.language.clone(),
-            config.code_file_path.clone(),
-            &config.code,
+            &config.code.theme,
+            config.code.language.clone(),
+            config.code.file_path.clone(),
+            &config.code.content,
         )?;
         let editor_background_color = theme_provider.theme_background();
         let context = ComponentContext {
@@ -85,16 +87,36 @@ impl Snapshot for ImageSnapshot {
             take_snapshot_params: Arc::new(config.clone()),
             theme_provider,
         };
-        let background_padding =
-            Padding::from_config(config.bg_x_padding, config.bg_y_padding, config.bg_padding);
+        let code_lines = config.code.content.lines().collect::<Vec<&str>>();
+        let background_padding = Padding::from(config.window.margin);
 
         // If vertical background padding is less than 82., should hidden watermark component
         // If watermark text is equal to "", the watermark component is hidden
-        let watermark = if background_padding.bottom >= VIEW_WATERMARK_PADDING {
+        let watermark = if background_padding.bottom >= DEFAULT_WINDOW_MARGIN {
             config.watermark.clone()
         } else {
             None
         };
+        let window_padding = Padding {
+            top: if config.window.mac_window_bar {
+                14.
+            } else {
+                12.
+            },
+            ..Padding::from_value(14.)
+        };
+        // CodeSnap not support custom border width for now
+        let border_width = match config.window.border {
+            Some(_) => 1.,
+            None => 0.,
+        };
+        let border_rgba_color: RgbaColor = config
+            .window
+            .border
+            .unwrap_or_default()
+            .color
+            .as_str()
+            .into();
         let pixmap = Container::from_children(vec![Box::new(Background::new(
             background_padding,
             vec![
@@ -102,37 +124,37 @@ impl Snapshot for ImageSnapshot {
                     Rect::create_with_border(
                         12.,
                         editor_background_color.into(),
-                        config.min_width,
-                        Padding::from_value(16.),
-                        1.,
-                        Color::from_rgba8(255, 255, 255, 50),
+                        DEFAULT_WINDOW_MIN_WIDTH,
+                        window_padding.clone(),
+                        border_width,
+                        border_rgba_color.into(),
                         vec![
                             Box::new(Row::from_children(vec![
-                                Box::new(MacTitleBar::from_radius(6., config.mac_window_bar)),
-                                Box::new(Title::from_text(config.title)),
+                                Box::new(MacTitleBar::new(config.window.mac_window_bar)),
+                                Box::new(Title::from_config(config.window.title)),
                             ])),
                             Box::new(Breadcrumbs::from_path(
-                                config.file_path.clone(),
-                                15.,
-                                config.breadcrumbs_separator.clone(),
-                                config.has_breadcrumbs,
+                                config.code.file_path.clone(),
+                                config.code.breadcrumbs.clone(),
                             )),
                             Box::new(CodeBlock::from_children(vec![
-                                Box::new(HighlightCodeBlock::from_line_number(
-                                    config.highlight_start_line_number,
-                                    config.highlight_end_line_number,
+                                Box::new(HighlightCodeBlock::from(
+                                    config.code.highlight_lines.clone(),
+                                    code_lines.len(),
                                     LINE_HEIGHT,
+                                    window_padding,
                                 )),
-                                Box::new(LineNumber::new(
-                                    &config.code,
-                                    config.start_line_number,
-                                    LINE_HEIGHT,
-                                )),
-                                Box::new(Code::new(&config.code, LINE_HEIGHT, 12.5)),
+                                Box::new(LineNumber::new(config.code.clone(), LINE_HEIGHT)),
+                                Box::new(Code::new(&config.code.content, LINE_HEIGHT, 12.5)),
                             ])),
                         ],
                     )
-                    .shadow(0., 21., 20., Color::from_rgba8(0, 0, 0, 80)),
+                    .shadow(
+                        0.,
+                        21.,
+                        config.window.shadow,
+                        Color::from_rgba8(0, 0, 0, 80),
+                    ),
                 ),
                 Box::new(Watermark::new(watermark)),
             ],

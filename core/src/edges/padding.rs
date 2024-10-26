@@ -1,3 +1,5 @@
+use crate::config;
+
 use super::edge::Edge;
 
 #[derive(Clone, Default, Debug)]
@@ -41,6 +43,18 @@ impl Padding {
                 left: horizontal_background_padding,
                 right: horizontal_background_padding,
             },
+        }
+    }
+}
+
+// The window margin is equal to background padding
+impl From<config::Margin> for Padding {
+    fn from(margin: config::Margin) -> Self {
+        Padding {
+            left: margin.x,
+            right: margin.x,
+            top: margin.y,
+            bottom: margin.y,
         }
     }
 }

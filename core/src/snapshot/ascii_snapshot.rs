@@ -2,7 +2,6 @@ use std::cmp::max;
 
 use crate::utils::code::{calc_max_line_number_length, calc_wh, prepare_code};
 
-use super::snapshot::Snapshot;
 use arboard::Clipboard;
 
 const SPACE_BOTH_SIDE: usize = 2;
@@ -19,27 +18,33 @@ fn optional(component: String, is_view: bool) -> String {
     }
 }
 
-impl Snapshot for ASCIISnapshot {
-    fn copy(&self) -> anyhow::Result<()> {
+impl ASCIISnapshot {
+    pub fn copy(&self) -> anyhow::Result<()> {
         Clipboard::new()?.set_text(self.content.as_str())?;
 
         Ok(())
     }
 
-    fn save(&self, _save_path: &str) -> anyhow::Result<()> {
+    pub fn save(&self, _save_path: &str) -> anyhow::Result<()> {
         todo!()
     }
 
-    fn from_config(config: crate::config::SnapshotConfig) -> anyhow::Result<Self> {
-        let code = prepare_code(&config.code);
+    pub fn from_config(config: crate::config::SnapshotConfig) -> anyhow::Result<Self> {
+        let code = prepare_code(&config.code.content);
         let (width, height) = calc_wh(&code, 1., 1.);
         let calc_line_number_width = |start_line_number: u32| {
             calc_max_line_number_length(height as usize, start_line_number)
         };
-        let frame_width = max(width as usize, config.file_path.len()) + SPACE_BOTH_SIDE;
-        let frame_width = match config.start_line_number {
-            Some(start_line_number) => {
-                frame_width + SPACE_BOTH_SIDE + calc_line_number_width(start_line_number)
+        let len = config
+            .code
+            .clone()
+            .file_path
+            .and_then(|x| Some(x.len()))
+            .unwrap_or(0);
+        let frame_width = max(width as usize, len + SPACE_BOTH_SIDE);
+        let frame_width = match config.code.line_number {
+            Some(ref line_number) => {
+                frame_width + SPACE_BOTH_SIDE + calc_line_number_width(line_number.start_number)
             }
             None => frame_width,
         };
@@ -53,11 +58,11 @@ impl Snapshot for ASCIISnapshot {
             .map(|(i, line)| {
                 format!(
                     "│ {:1$} │\n",
-                    match config.start_line_number {
-                        Some(start_line_number) => format!(
+                    match config.code.line_number {
+                        Some(ref line_number) => format!(
                             "{:1$} {line}",
-                            start_line_number as usize + i,
-                            calc_line_number_width(start_line_number),
+                            line_number.start_number as usize + i,
+                            calc_line_number_width(line_number.start_number),
                         ),
                         None => line.to_string(),
                     },
@@ -67,8 +72,11 @@ impl Snapshot for ASCIISnapshot {
             .collect::<String>();
         let text_line = |text: &str| format!("│ {:1$}│\n", text, frame_width_with_content);
         let breadcrumbs = optional(
-            format!("{}{line}", text_line(&config.file_path)),
-            config.has_breadcrumbs,
+            format!(
+                "{}{line}",
+                text_line(&config.code.file_path.unwrap_or(String::from("")))
+            ),
+            config.code.breadcrumbs.is_some(),
         );
         let ascii_snapshot = format!("{top_frame}{breadcrumbs}{code}{bottom_frame}");
 

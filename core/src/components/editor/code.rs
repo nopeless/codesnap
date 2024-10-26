@@ -38,9 +38,9 @@ impl Component for Code {
         let params = &context.take_snapshot_params;
         let highlight = Highlight::new(
             self.value.clone(),
-            params.code_font_family.clone(),
-            params.code_file_path.clone(),
-            params.language.clone(),
+            params.code.font_family.clone(),
+            params.code.file_path.clone(),
+            params.code.language.clone(),
         );
         let (mut highlight_lines, syntax_set) = context.theme_provider.highlight();
         let highlight_result = highlight.parse(&mut highlight_lines, syntax_set)?;

@@ -1,4 +1,4 @@
-use cosmic_text::{Align, Attrs, Color, Weight};
+use cosmic_text::{Align, Attrs, Color, Family, Weight};
 
 use crate::{
     components::interface::{
@@ -6,12 +6,16 @@ use crate::{
         render_error,
         style::{ComponentStyle, RawComponentStyle, Size, Style},
     },
+    config::TitleConfig,
     edges::margin::Margin,
-    utils::text::FontRenderer,
+    utils::{
+        color::{parse_hex_to_cosmic_color, RgbaColor},
+        text::FontRenderer,
+    },
 };
 
 pub struct Title {
-    text: Option<String>,
+    config: Option<TitleConfig>,
     children: Vec<Box<dyn Component>>,
 }
 
@@ -21,11 +25,11 @@ impl Component for Title {
     }
 
     fn render_condition(&self) -> bool {
-        self.text.is_some()
+        self.config.is_some()
     }
 
     fn style(&self) -> RawComponentStyle {
-        let calced_title_width = 6. * self.text.clone().unwrap().len() as f32;
+        let calced_title_width = 6. * self.config.clone().unwrap().title.len() as f32;
 
         RawComponentStyle::default()
             .margin(Margin {
@@ -43,10 +47,11 @@ impl Component for Title {
         _style: &ComponentStyle,
         _parent_style: &Style<f32>,
     ) -> render_error::Result<()> {
+        let config = self.config.clone().unwrap();
         let attrs = Attrs::new()
             .weight(Weight::BOLD)
-            .color(Color::rgb(172, 169, 178));
-        let text = self.text.clone().unwrap();
+            .color(parse_hex_to_cosmic_color(&config.color))
+            .family(Family::Name(&config.font_family));
 
         FontRenderer::new(
             10.,
@@ -59,7 +64,7 @@ impl Component for Title {
             render_params.y,
             pixmap.width() as f32,
             pixmap.height() as f32,
-            &text,
+            &config.title,
             attrs,
             Some(Align::Center),
             pixmap,
@@ -70,9 +75,9 @@ impl Component for Title {
 }
 
 impl Title {
-    pub fn from_text(text: Option<String>) -> Title {
+    pub fn from_config(config: Option<TitleConfig>) -> Title {
         Title {
-            text,
+            config,
             children: vec![],
         }
     }

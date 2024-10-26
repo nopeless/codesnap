@@ -16,7 +16,7 @@ use tiny_skia::{
 struct ShadowConfig {
     x: f32,
     y: f32,
-    blur: f64,
+    blur: f32,
     color: Color,
 }
 
@@ -139,8 +139,7 @@ impl Rect {
         let w = host_element_style.width;
         let h = host_element_style.height;
         let config = context.take_snapshot_params.clone();
-        let background_padding =
-            Padding::from_config(config.bg_x_padding, config.bg_y_padding, config.bg_padding);
+        let background_padding: Padding = config.window.margin.clone().into();
         // The shadow has a fixed length when blur is applied
         // thus the (shadow length) + (pixmap length) will out of the original pixmap
         // so we need to set a bigger pixmap to draw the shadow
@@ -177,8 +176,8 @@ impl Rect {
         let rgba = pixmap.data_mut().as_rgba_mut();
 
         apply(
-            shadow.blur,
-            shadow.blur,
+            shadow.blur as f64,
+            shadow.blur as f64,
             ImageRefMut::new(pixmap_w as u32, pixmap_h as u32, rgba),
         );
 
@@ -205,14 +204,12 @@ impl Rect {
     pub fn create_with_border(
         radius: f32,
         color: Color,
-        min_width: Option<f32>,
+        min_width: f32,
         padding: Padding,
         border_width: f32,
         border_color: Color,
         children: Vec<Box<dyn Component>>,
     ) -> Rect {
-        let min_width = min_width.unwrap_or(0.);
-
         Rect::new(
             radius,
             color,
@@ -234,7 +231,7 @@ impl Rect {
         )
     }
 
-    pub fn shadow(mut self, x: f32, y: f32, blur: f64, color: Color) -> Rect {
+    pub fn shadow(mut self, x: f32, y: f32, blur: f32, color: Color) -> Rect {
         self.shadow = Some(ShadowConfig { x, y, blur, color });
         self
     }

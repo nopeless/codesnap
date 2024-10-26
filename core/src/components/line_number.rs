@@ -61,7 +61,7 @@ impl Component for LineNumber {
                 &self.line_number_content.join("\n"),
                 Attrs::new()
                     .color(Color::rgb(73, 81, 98))
-                    .family(Family::Name(&context.take_snapshot_params.code_font_family)),
+                    .family(Family::Name(&context.take_snapshot_params.code.font_family)),
             )],
             pixmap,
         );
@@ -71,11 +71,12 @@ impl Component for LineNumber {
 }
 
 impl LineNumber {
-    pub fn new(content: &str, start_line_number: Option<u32>, line_height: f32) -> LineNumber {
-        match start_line_number {
+    pub fn new(code: crate::config::Code, line_height: f32) -> LineNumber {
+        match code.line_number {
             None => LineNumber::default(),
-            Some(start_line_number) => {
-                let lines = content.split("\n").collect::<Vec<&str>>();
+            Some(line_number) => {
+                let lines = code.content.split("\n").collect::<Vec<&str>>();
+                let start_line_number = line_number.start_number;
                 let max_line_number = lines.len() as u32 + start_line_number;
                 let number_of_digit = (max_line_number - 1).to_string().len();
 

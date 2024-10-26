@@ -2,7 +2,7 @@ use cosmic_text::{Attrs, Color, Family};
 use regex::Regex;
 
 use crate::{
-    edges::margin::Margin, utils::code::calc_wh_with_min_width, utils::text::FontRenderer,
+    config, edges::margin::Margin, utils::code::calc_wh_with_min_width, utils::text::FontRenderer,
 };
 
 use super::interface::{
@@ -10,11 +10,12 @@ use super::interface::{
     style::{ComponentStyle, RawComponentStyle, Size},
 };
 
+const LINE_HEIGHT: f32 = 15.;
+
 pub struct Breadcrumbs {
     children: Vec<Box<dyn Component>>,
-    path: String,
-    line_height: f32,
-    has_breadcrumbs: bool,
+    path: Option<String>,
+    config: Option<config::Breadcrumbs>,
 }
 
 impl Component for Breadcrumbs {
@@ -25,15 +26,17 @@ impl Component for Breadcrumbs {
     fn style(&self) -> RawComponentStyle {
         let style = RawComponentStyle::default();
 
-        if self.has_breadcrumbs {
-            let (w, h) = calc_wh_with_min_width(&self.path, 8., self.line_height);
+        if self.config.is_some() {
+            if let Some(path) = &self.path {
+                let (w, h) = calc_wh_with_min_width(&path, 8., LINE_HEIGHT);
 
-            style
-                .size(Size::Num(w), Size::Num(h))
-                .margin(Margin::default())
-        } else {
-            style
+                return style
+                    .size(Size::Num(w), Size::Num(h))
+                    .margin(Margin::default());
+            }
         }
+
+        style
     }
 
     fn draw_self(
@@ -44,25 +47,27 @@ impl Component for Breadcrumbs {
         style: &super::interface::style::ComponentStyle,
         _parent_style: &ComponentStyle,
     ) -> super::interface::render_error::Result<()> {
-        if self.has_breadcrumbs {
-            let attrs = Attrs::new()
-                .color(Color::rgb(128, 132, 139))
-                .family(Family::Name(&context.take_snapshot_params.code_font_family));
+        if self.config.is_some() {
+            if let Some(ref path) = self.path {
+                let attrs = Attrs::new()
+                    .color(Color::rgb(128, 132, 139))
+                    .family(Family::Name(&context.take_snapshot_params.code.font_family));
 
-            FontRenderer::new(
-                12.,
-                self.line_height,
-                context.scale_factor,
-                context.take_snapshot_params.fonts_folder.clone(),
-            )
-            .draw_text(
-                render_params.x,
-                render_params.y,
-                style.width,
-                self.line_height,
-                vec![(&self.path, attrs)],
-                pixmap,
-            );
+                FontRenderer::new(
+                    12.,
+                    LINE_HEIGHT,
+                    context.scale_factor,
+                    context.take_snapshot_params.fonts_folder.clone(),
+                )
+                .draw_text(
+                    render_params.x,
+                    render_params.y,
+                    style.width,
+                    LINE_HEIGHT,
+                    vec![(path, attrs)],
+                    pixmap,
+                );
+            }
         }
 
         Ok(())
@@ -71,21 +76,20 @@ impl Component for Breadcrumbs {
 
 impl Breadcrumbs {
     pub fn from_path(
-        path: String,
-        line_height: f32,
-        separator: String,
-        has_breadcrumbs: bool,
+        file_path: Option<String>,
+        config: Option<config::Breadcrumbs>,
     ) -> Breadcrumbs {
-        let path = Regex::new("/")
-            .unwrap()
-            .replace_all(&path, separator)
-            .to_string();
-
         Breadcrumbs {
             children: vec![],
-            path,
-            line_height,
-            has_breadcrumbs,
+            path: file_path,
+            config,
         }
+    }
+
+    pub fn parse_separator(&self, path: &str, separator: &str) -> String {
+        Regex::new("/")
+            .unwrap()
+            .replace_all(path, separator)
+            .to_string()
     }
 }

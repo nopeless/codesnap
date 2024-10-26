@@ -9,8 +9,9 @@ use crate::{
     edges::margin::Margin,
 };
 
+const RADIUS: f32 = 6.;
+
 pub struct MacTitleBar {
-    radius: f32,
     children: Vec<Box<dyn Component>>,
     render_condition: bool,
 }
@@ -21,7 +22,7 @@ impl Component for MacTitleBar {
     }
 
     fn style(&self) -> RawComponentStyle {
-        let demeter = self.radius * 2.;
+        let demeter = RADIUS * 2.;
 
         Style::default()
             .size(Size::Num(demeter + 2. * 25.), Size::Num(demeter))
@@ -47,8 +48,8 @@ impl Component for MacTitleBar {
             // Control bar construct by draw circles, after drawn, the path will be at the center,
             // so the x, y need to offset by radius of the circle, and the next shape will still
             // be drwan on the original point
-            render_params.x + self.radius,
-            render_params.y + self.radius,
+            render_params.x + RADIUS,
+            render_params.y + RADIUS,
             pixmap,
             vec![
                 Color::from_rgba8(255, 94, 87, 255),
@@ -64,9 +65,8 @@ impl Component for MacTitleBar {
 }
 
 impl MacTitleBar {
-    pub fn from_radius(radius: f32, render_condition: bool) -> MacTitleBar {
+    pub fn new(render_condition: bool) -> MacTitleBar {
         MacTitleBar {
-            radius,
             children: vec![],
             render_condition,
         }
@@ -82,7 +82,7 @@ impl MacTitleBar {
         transform: Transform,
     ) {
         for (index, color) in colors.into_iter().enumerate() {
-            let diameter = self.radius * 2.;
+            let diameter = RADIUS * 2.;
 
             self.draw_control_button(
                 x,
@@ -106,7 +106,7 @@ impl MacTitleBar {
     ) {
         let mut path_builder = PathBuilder::new();
 
-        path_builder.push_circle(x + x_offset, y, self.radius);
+        path_builder.push_circle(x + x_offset, y, RADIUS);
         path_builder.close();
 
         let path = path_builder.finish().unwrap();
