@@ -1,11 +1,68 @@
 use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
+use tiny_skia::GradientStop;
 
 use crate::snapshot::{ascii_snapshot::ASCIISnapshot, image_snapshot::ImageSnapshot};
 
 pub const DEFAULT_WINDOW_MARGIN: f32 = 90.;
 
-#[derive(Serialize, Deserialize, Clone, Builder)]
+#[derive(Clone)]
+pub enum DimensionValue {
+    Num(f32),
+    Max,
+}
+
+#[derive(Clone)]
+pub(crate) struct Point<T> {
+    pub(crate) x: T,
+    pub(crate) y: T,
+}
+
+pub type GradientPoint = Point<DimensionValue>;
+
+impl Point<DimensionValue> {
+    pub fn into_f32_point(&self, pixmap_width: f32, pixmap_height: f32) -> Point<f32> {
+        let x = match self.x {
+            DimensionValue::Num(num) => num,
+            DimensionValue::Max => pixmap_width,
+        };
+        let y = match self.y {
+            DimensionValue::Num(num) => num,
+            DimensionValue::Max => pixmap_height,
+        };
+
+        Point { x, y }
+    }
+}
+
+#[derive(Clone)]
+pub struct LinearGradient {
+    pub start: GradientPoint,
+    pub end: GradientPoint,
+    pub stops: Vec<GradientStop>,
+}
+
+// type BackgroundLinearGradient = LinearGradient<Vec<GradientStop>>;
+
+// pub(crate) type PresetBackgroundLinearGradient = LinearGradient<&'static [GradientStop]>;
+
+// impl From<PresetBackgroundLinearGradient> for BackgroundLinearGradient {
+//     fn from(value: PresetBackgroundLinearGradient) -> Self {
+//         BackgroundLinearGradient {
+//             start: value.start,
+//             end: value.end,
+//             stops: value.stops.to_vec(),
+//         }
+//     }
+// }
+
+#[derive(Clone)]
+pub enum Background {
+    Solid(String),
+    Gradient(LinearGradient),
+}
+
+#[derive(Clone, Builder)]
 pub struct TitleConfig {
     #[builder(setter(into))]
     pub title: String,
@@ -17,7 +74,7 @@ pub struct TitleConfig {
     pub color: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Builder)]
+#[derive(Clone, Builder)]
 pub struct Margin {
     #[builder(setter(into, strip_option), default = DEFAULT_WINDOW_MARGIN)]
     pub x: f32,
@@ -26,7 +83,7 @@ pub struct Margin {
     pub y: f32,
 }
 
-#[derive(Serialize, Deserialize, Clone, Builder)]
+#[derive(Clone, Builder)]
 pub struct Breadcrumbs {
     #[builder(setter(into, strip_option), default = None)]
     pub separator: Option<String>,
@@ -38,13 +95,13 @@ pub struct Breadcrumbs {
     pub color: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Builder, Default)]
+#[derive(Clone, Builder, Default)]
 pub struct Border {
     #[builder(setter(into))]
     pub color: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Builder)]
+#[derive(Clone, Builder)]
 pub struct Window {
     #[builder(setter(into, strip_option), default = Margin {x : DEFAULT_WINDOW_MARGIN, y: DEFAULT_WINDOW_MARGIN})]
     pub margin: Margin,
@@ -62,13 +119,13 @@ pub struct Window {
     pub shadow: f32,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Clone)]
 pub enum HighlightLine {
     Single(u32, String),
     Range(u32, u32, String),
 }
 
-#[derive(Serialize, Deserialize, Clone, Builder)]
+#[derive(Clone, Builder)]
 pub struct LineNumber {
     #[builder(setter(into))]
     pub start_number: u32,
@@ -77,7 +134,7 @@ pub struct LineNumber {
     pub color: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Builder)]
+#[derive(Clone, Builder)]
 pub struct Code {
     #[builder(setter(into))]
     pub content: String,
@@ -124,7 +181,7 @@ pub struct Watermark {
     pub color: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Builder)]
+#[derive(Clone, Builder)]
 #[builder(name = "CodeSnap", build_fn(validate = "Self::validate"))]
 pub struct SnapshotConfig {
     #[builder(setter(into, strip_option), default = WindowBuilder::default().build().unwrap())]
@@ -170,8 +227,8 @@ pub struct SnapshotConfig {
     /// - grape
     /// - dusk
     /// - sea
-    #[builder(setter(into), default = String::from("bamboo"))]
-    pub background: String,
+    #[builder(setter(into))]
+    pub background: Background,
     // /// Draw a MacOS style window bar
     // #[builder(default = true)]
     // pub mac_window_bar: bool,

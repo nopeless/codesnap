@@ -4,7 +4,7 @@ use tiny_skia::{
 
 use crate::{
     edges::{edge::Edge, padding::Padding},
-    utils::color::{is_valid_hex_color, RgbaColor},
+    utils::color::RgbaColor,
 };
 
 use super::interface::{
@@ -58,20 +58,41 @@ impl Component for Background {
 
         paint.anti_alias = false;
 
-        if is_valid_hex_color(&params.background) {
-            let rgba_color: RgbaColor = params.background.as_str().into();
+        match &params.background {
+            crate::config::Background::Solid(solid_background) => {
+                let rgba_color: RgbaColor = solid_background.as_str().into();
 
-            paint.set_color(rgba_color.into());
-        } else {
-            paint.shader = LinearGradient::new(
-                Point::from_xy(0., 0.),
-                Point::from_xy(w, 0.),
-                Background::get_theme(&params.background)?,
-                SpreadMode::Pad,
-                Transform::identity(),
-            )
-            .unwrap();
-        }
+                paint.set_color(rgba_color.into());
+            }
+            crate::config::Background::Gradient(gradient_background) => {
+                let start = gradient_background.start.into_f32_point(w, h);
+                let end = gradient_background.end.into_f32_point(w, h);
+
+                paint.shader = LinearGradient::new(
+                    Point::from_xy(start.x, start.y),
+                    Point::from_xy(end.x, end.y),
+                    gradient_background.stops.clone(),
+                    SpreadMode::Pad,
+                    Transform::identity(),
+                )
+                .unwrap();
+            }
+        };
+
+        // if is_valid_hex_color(&params.background) {
+        //     let rgba_color: RgbaColor = params.background.as_str().into();
+        //
+        //     paint.set_color(rgba_color.into());
+        // } else {
+        //     paint.shader = LinearGradient::new(
+        //         Point::from_xy(0., 0.),
+        //         Point::from_xy(w, 0.),
+        //         Background::get_theme(&params.background)?,
+        //         SpreadMode::Pad,
+        //         Transform::identity(),
+        //     )
+        //     .unwrap();
+        // }
 
         pixmap.fill_rect(
             Rect::from_xywh(0., 0., w, h).unwrap(),
