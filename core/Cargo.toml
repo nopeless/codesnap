@@ -1,6 +1,6 @@
 [package]
 name = "codesnap"
-version = "0.0.1"
+version = "0.1.0"
 edition = "2021"
 description = "A tool for creating code snapshots"
 license = "MIT"
