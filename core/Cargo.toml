@@ -2,7 +2,7 @@
 name = "codesnap"
 version = "0.1.0"
 edition = "2021"
-description = "A tool for creating code snapshots"
+description = "Pure rust beautiful code snapshot library and also provide CLI tools"
 license = "MIT"
 
 [dependencies]
