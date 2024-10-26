@@ -36,12 +36,7 @@ impl Component for Code {
         _parent_style: &ComponentStyle,
     ) -> render_error::Result<()> {
         let params = &context.take_snapshot_params;
-        let highlight = Highlight::new(
-            self.value.clone(),
-            params.code.font_family.clone(),
-            params.code.file_path.clone(),
-            params.code.language.clone(),
-        );
+        let highlight = Highlight::new(self.value.clone(), params.code.font_family.clone());
         let (mut highlight_lines, syntax_set) = context.theme_provider.highlight();
         let highlight_result = highlight.parse(&mut highlight_lines, syntax_set)?;
 

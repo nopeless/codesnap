@@ -2,7 +2,10 @@ use derive_builder::Builder;
 use serde::{Deserialize, Serialize};
 use tiny_skia::GradientStop;
 
-use crate::snapshot::{ascii_snapshot::ASCIISnapshot, image_snapshot::ImageSnapshot};
+use crate::{
+    preset_themes::BAMBOO,
+    snapshot::{ascii_snapshot::ASCIISnapshot, image_snapshot::ImageSnapshot},
+};
 
 pub const DEFAULT_WINDOW_MARGIN: f32 = 90.;
 
@@ -227,7 +230,7 @@ pub struct SnapshotConfig {
     /// - grape
     /// - dusk
     /// - sea
-    #[builder(setter(into))]
+    #[builder(setter(into), default = BAMBOO.clone())]
     pub background: Background,
     // /// Draw a MacOS style window bar
     // #[builder(default = true)]

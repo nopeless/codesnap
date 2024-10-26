@@ -1,4 +1,4 @@
-use cosmic_text::{Align, Attrs, Color, Family, Weight};
+use cosmic_text::{Align, Attrs, Family, Weight};
 
 use crate::{
     components::interface::{
@@ -8,10 +8,7 @@ use crate::{
     },
     config::TitleConfig,
     edges::margin::Margin,
-    utils::{
-        color::{parse_hex_to_cosmic_color, RgbaColor},
-        text::FontRenderer,
-    },
+    utils::{color::parse_hex_to_cosmic_color, text::FontRenderer},
 };
 
 pub struct Title {

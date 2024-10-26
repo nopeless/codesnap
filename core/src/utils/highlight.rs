@@ -1,35 +1,21 @@
-use std::collections::HashMap;
-
 use cosmic_text::{Attrs, Family, Style, Weight};
 use syntect::{
-    easy::HighlightLines,
-    highlighting::{FontStyle, Theme, ThemeSet},
-    parsing::{SyntaxReference, SyntaxSet},
-    util::LinesWithEndings,
+    easy::HighlightLines, highlighting::FontStyle, parsing::SyntaxSet, util::LinesWithEndings,
 };
 
 use crate::components::interface::render_error::RenderError;
 
 pub struct Highlight {
     content: String,
-    code_file_path: Option<String>,
-    language: Option<String>,
     font_family: String,
 }
 
 pub type HighlightResult<'a> = Vec<(&'a str, Attrs<'a>)>;
 
 impl Highlight {
-    pub fn new(
-        content: String,
-        font_family: String,
-        code_file_path: Option<String>,
-        language: Option<String>,
-    ) -> Highlight {
+    pub fn new(content: String, font_family: String) -> Highlight {
         Highlight {
             content,
-            code_file_path,
-            language,
             font_family,
         }
     }
