@@ -24,8 +24,10 @@ jobs:
           file: core/Cargo.toml
           field: package.version
 
-      - name: Foo
-        run: "echo ${{ steps.read_toml.outputs.value }}"
+      - uses: actions-rs/cargo@v1
+        with:
+          command: login
+          args: ${{ secrets.CRATES_TOKEN }} 
 
       - uses: actions-rs/cargo@v1
         with:
