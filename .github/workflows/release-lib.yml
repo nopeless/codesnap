@@ -28,7 +28,6 @@ jobs:
         run: "echo ${{ steps.read_toml.outputs.value }}"
 
       - uses: actions-rs/cargo@v1
-        working-directory: core
         with:
           command: publish
           args: --manifest-path core/Cargo.toml
