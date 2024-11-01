@@ -334,17 +334,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1462739cb27611015575c0c11df5df7601141071f07518d56fcc1be504cbec97"
 
 [[package]]
-name = "cli"
-version = "0.1.0"
-dependencies = [
- "ansi_term",
- "anyhow",
- "clap",
- "codesnap",
- "serde_json",
-]
-
-[[package]]
 name = "clipboard-win"
 version = "5.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -373,6 +362,17 @@ dependencies = [
  "thiserror",
  "tiny-skia",
  "two-face",
+]
+
+[[package]]
+name = "codesnap-cli"
+version = "0.1.0"
+dependencies = [
+ "ansi_term",
+ "anyhow",
+ "clap",
+ "codesnap",
+ "serde_json",
 ]
 
 [[package]]

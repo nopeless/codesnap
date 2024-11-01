@@ -3,7 +3,8 @@ name: Release CodeSnap to crates.io
 on:
   push:
     paths:
-      core/Cargo.toml
+      - core/Cargo.toml
+      - lib/Cargo.toml
     branches:
       - main 
 
@@ -29,10 +30,17 @@ jobs:
           command: login
           args: ${{ secrets.CRATES_TOKEN }} 
 
-      - uses: actions-rs/cargo@v1
+      - name: Publish library to crates.io
+        uses: actions-rs/cargo@v1
         with:
           command: publish
           args: --manifest-path core/Cargo.toml
+
+      - name: Publish cli to crates.io
+        uses: actions-rs/cargo@v1
+        with:
+          command: publish
+          args: --manifest-path cli/Cargo.toml
 
       - name: Bump version and push tag
         id: tag_version
