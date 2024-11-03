@@ -89,5 +89,5 @@ jobs:
           tar: unix
           zip: windows
           token: ${{ secrets.GITHUB_TOKEN }} 
-          ref: ${{ needs.secret-generator.outputs.tag }}
+          ref: "refs/tags/${{ needs.secret-generator.outputs.tag }}"
     
