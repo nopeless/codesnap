@@ -21,7 +21,7 @@ Generally, you can directly use CLI tool provide by CodeSnap to generate code sn
 <img src="https://github.com/user-attachments/assets/b8c9490f-ce17-4881-9d36-72e9c17bf34b" width="580px" />
 
 
-## Install
+## Getting started
 CodeSnap provide two ways to use it, you can use it as a CLI tool or as a library in your own project.
 
 ### CLI
