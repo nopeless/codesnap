@@ -66,8 +66,12 @@ snapshot.copy_to_clipboard()?;
 Read more about [codesnap library]()
 
 ## Related projects
-- [codesnap-cli]()
-- [codesnap.nvim]()
+- [codesnap](https://github.com/mistricky/CodeSnap/tree/main/core)
+- [codesnap-cli](https://github.com/mistricky/CodeSnap/tree/main/cli)
+- [codesnap.nvim](https://github.com/mistricky/codesnap.nvim)
+- [codesnap.idea](https://github.com/RAOE/CodeSnap.idea)
+- codesnap.vscode (Planning)
+- codesnap.zed (Planning)
 
 
 ## License
