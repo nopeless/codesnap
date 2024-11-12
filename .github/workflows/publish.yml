@@ -56,6 +56,10 @@ jobs:
           name: Release ${{ steps.tag_version.outputs.new_tag }}
           generateReleaseNotes: true
 
+      - name: Output version
+        run: echo "version=${{ steps.tag_version.outputs.new_tag }}" >> "$GITHUB_OUTPUT"
+
+
   upload-assets:
     needs: release
     strategy:
@@ -84,4 +88,5 @@ jobs:
           target: ${{ matrix.target }}
           tar: unix
           zip: windows
+          ref: ${{ needs.release.outputs.version }}
           token: ${{ secrets.GITHUB_TOKEN }}
