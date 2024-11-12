@@ -88,5 +88,5 @@ jobs:
           target: ${{ matrix.target }}
           tar: unix
           zip: windows
-          ref: ${{ needs.release.outputs.version }}
+          ref: refs/tags/${{ needs.release.outputs.version }}
           token: ${{ secrets.GITHUB_TOKEN }}
