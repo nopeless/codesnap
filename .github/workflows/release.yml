@@ -46,7 +46,7 @@ jobs:
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PAT }}
           custom_tag: ${{ steps.read_toml.outputs.value }}
 
       - name: Create a GitHub release
@@ -55,38 +55,5 @@ jobs:
           tag: ${{ steps.tag_version.outputs.new_tag }}
           name: Release ${{ steps.tag_version.outputs.new_tag }}
           generateReleaseNotes: true
+          token: ${{ secrets.PAT }}
 
-      - name: Output version
-        run: echo "version=${{ steps.tag_version.outputs.new_tag }}" >> "$GITHUB_OUTPUT"
-
-
-  upload-assets:
-    needs: release
-    strategy:
-      matrix:
-        include:
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-
-          - target: x86_64-apple-darwin
-            os: macos-latest
-
-          - target: aarch64-apple-darwin
-            os: macos-latest
-
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v3
-
-      - name: Build and upload binaries
-        uses: taiki-e/upload-rust-binary-action@v1
-        with:
-          bin: codesnap
-          target: ${{ matrix.target }}
-          tar: unix
-          zip: windows
-          ref: refs/tags/${{ needs.release.outputs.version }}
-          token: ${{ secrets.GITHUB_TOKEN }}
