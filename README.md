@@ -40,11 +40,10 @@ codesnap -h
 Read more about [codesnap cli]()
 
 ### Library
-For library, you can add it to your `Cargo.toml`:
+For library, add `CodeSnap` in your project using Cargo
 
-```toml
-[dependencies]
-codesnap = "0.3.1"
+```bash
+cargo add codesnap
 ```
 
 Use `CodeSnap` builder to generate code snapshot:
