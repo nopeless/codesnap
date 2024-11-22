@@ -30,17 +30,17 @@ jobs:
           command: login
           args: ${{ secrets.CRATES_TOKEN }}
 
-      - name: Publish library to crates.io
-        uses: actions-rs/cargo@v1
-        with:
-          command: publish
-          args: --manifest-path core/Cargo.toml
+      # - name: Publish library to crates.io
+      #   uses: actions-rs/cargo@v1
+      #   with:
+      #     command: publish
+      #     args: --manifest-path core/Cargo.toml
 
-      - name: Publish cli to crates.io
-        uses: actions-rs/cargo@v1
-        with:
-          command: publish
-          args: --manifest-path cli/Cargo.toml
+      # - name: Publish cli to crates.io
+      #   uses: actions-rs/cargo@v1
+      #   with:
+      #     command: publish
+      #     args: --manifest-path cli/Cargo.toml
 
       - name: Bump version and push tag
         id: tag_version
@@ -49,11 +49,47 @@ jobs:
           github_token: ${{ secrets.PAT }}
           custom_tag: ${{ steps.read_toml.outputs.value }}
 
+      - name: Build changelog for main repository
+        id: build_changelog
+        uses: mikepenz/release-changelog-builder-action@v5
+        with:
+          token: ${{ secrets.PAT }}
+          toTag: ${{ steps.tag_version.outputs.new_tag }}
+          configurationJson: |
+            {
+              "categories": [
+                {
+                    "title": "## What's Changed:",
+                    "labels": []
+                }
+              ],
+              "pr_template": "- #{{TITLE}} by @#{{AUTHOR}} in #{{URL}}",
+              "template": "#{{CHANGELOG}}\n\n**Full Changelog**: https://github.com/mistricky/CodeSnap/compare/#{{FROM_TAG}}...#{{TO_TAG}}"
+            }
+
       - name: Create a GitHub release
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.tag_version.outputs.new_tag }}
           name: Release ${{ steps.tag_version.outputs.new_tag }}
-          generateReleaseNotes: true
           token: ${{ secrets.PAT }}
+          body: |
+            ## 👋 Hi, there!
+            Thanks for using CodeSnap! The most beautiful code screenshots tool, there are two ways to use CodeSnap:
 
+            Treat CodeSnap as library in your project by Cargo:
+
+            ```bash
+            Cargo add CodeSnap
+            ```
+
+            Or use CodeSnap as CLI tool installed globally:
+
+            **Cargo**
+            ```bash
+            Cargo install CodeSnap
+            ```
+
+            Of course, you can install CodeSnap manually by downloading the following binaries.
+
+            ${{steps.build_changelog.outputs.changelog}}
