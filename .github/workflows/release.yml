@@ -80,14 +80,14 @@ jobs:
             Treat CodeSnap as library in your project by Cargo:
 
             ```bash
-            Cargo add CodeSnap
+            Cargo add codesnap
             ```
 
             Or use CodeSnap as CLI tool installed globally:
 
             **Cargo**
             ```bash
-            Cargo install CodeSnap
+            Cargo install codesnap-cli
             ```
 
             Of course, you can install CodeSnap manually by downloading the following binaries.
