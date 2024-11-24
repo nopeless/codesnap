@@ -1,9 +1,14 @@
-use std::fs::{metadata, read_to_string};
+use std::{
+    fs::{metadata, read_to_string},
+    io::{stdin, BufReader, IsTerminal, Read},
+    process,
+};
 
 use anyhow::bail;
+use clap::CommandFactory;
 use codesnap::config::{Breadcrumbs, Code, CodeBuilder, HighlightLine};
 
-use crate::CLI;
+use crate::{CLI, STDIN_CODE_DEFAULT_CHAR};
 
 pub fn create_code(cli: &CLI, config_code: Code) -> anyhow::Result<Code> {
     let code_snippet = get_code_snippet(cli)?;
@@ -62,6 +67,25 @@ fn get_code_snippet(cli: &CLI) -> anyhow::Result<String> {
 
             Ok(read_to_string(file_path)?)
         }
-        None => Ok(cli.code.clone().unwrap().clone()),
+        None => {
+            let code = cli.code.clone().unwrap();
+
+            // Read code from pipe if the code option is "-"
+            if code == STDIN_CODE_DEFAULT_CHAR {
+                // If input come from terminal, print help and exit
+                if stdin().is_terminal() {
+                    CLI::command().print_help()?;
+                    process::exit(2);
+                }
+
+                let mut content = String::new();
+
+                BufReader::new(stdin().lock()).read_to_string(&mut content)?;
+
+                return Ok(content);
+            }
+
+            Ok(code)
+        }
     }
 }

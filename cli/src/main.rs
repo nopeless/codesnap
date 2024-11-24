@@ -6,14 +6,16 @@ mod window;
 
 use std::fs::read_to_string;
 
+use clap::value_parser;
 use clap::Parser;
-use clap::Subcommand;
 use code::create_code;
 use codesnap::config::CodeSnap;
 use codesnap::config::SnapshotConfig;
 use codesnap::snapshot::snapshot::Snapshot;
 use watermark::create_watermark;
 use window::create_window;
+
+pub const STDIN_CODE_DEFAULT_CHAR: &'static str = "-";
 
 /// CodeSnap is a CLI tool to generate beautiful snapshots of your code from terminal.
 #[derive(Parser)]
@@ -25,8 +27,8 @@ struct CLI {
     #[arg(short, long)]
     file: Option<String>,
 
-    /// Code snippet to snapshot
-    #[arg(short, long)]
+    /// Code snippet for snapshot
+    #[arg(short, long, default_missing_value = STDIN_CODE_DEFAULT_CHAR, require_equals=false, num_args=0..1, value_parser=value_parser!(String))]
     code: Option<String>,
 
     /// Output path for the snapshot, currently CodeSnap supports SVG format and PNG format
@@ -162,12 +164,6 @@ struct CLI {
     config: Option<String>,
 }
 
-#[derive(Subcommand)]
-enum Commands {
-    Save(Args),
-    Copy(Args),
-}
-
 #[derive(Parser)]
 struct Args {
     #[clap(short, long)]
@@ -177,6 +173,13 @@ struct Args {
 fn generate_snapshot() -> anyhow::Result<()> {
     let cli = CLI::parse();
 
+    if cli.output.is_none() && !cli.to_clipboard {
+        logger::warn("You have not specified any output option, CodeSnap will do nothing");
+        return Ok(());
+    }
+
+    // Create CodeSnap config from config, if the user does not have a config file, we will create
+    // a default CodeSnap config to $HOME/.codesnap/config.json for the user.
     let mut codesnap_default = if let Some(ref config) = cli.config {
         let content = read_to_string(config)?;
 
@@ -185,6 +188,7 @@ fn generate_snapshot() -> anyhow::Result<()> {
         CodeSnap::from_config(&config::get_config_content()?)?
     };
 
+    // Build screenshot config
     let mut codesnap = codesnap_default
         .map_code(|code| create_code(&cli, code))?
         .map_watermark(|watermark| create_watermark(&cli, watermark))?
