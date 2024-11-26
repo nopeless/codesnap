@@ -6,7 +6,10 @@ use std::{
 
 use anyhow::bail;
 use clap::CommandFactory;
-use codesnap::config::{Breadcrumbs, Code, CodeBuilder, HighlightLine};
+use codesnap::{
+    config::{Breadcrumbs, Code, CodeBuilder, HighlightLine},
+    utils::clipboard::Clipboard,
+};
 
 use crate::{CLI, STDIN_CODE_DEFAULT_CHAR};
 
@@ -20,7 +23,7 @@ pub fn create_code(cli: &CLI, config_code: Code) -> anyhow::Result<Code> {
         .code_font_family
         .clone()
         .unwrap_or(config_code.font_family);
-    code.file_path = cli.file.clone().or(config_code.file_path);
+    code.file_path = cli.from_file.clone().or(config_code.file_path);
     code.language = cli.language.clone().or(config_code.language);
     code.breadcrumbs = create_breadcrumbs(&cli).or(config_code.breadcrumbs);
     code.highlight_lines = create_highlight_lines(&cli)?;
@@ -36,56 +39,49 @@ fn create_highlight_lines(cli: &CLI) -> Result<Vec<HighlightLine>, serde_json::E
 }
 
 fn create_breadcrumbs(cli: &CLI) -> Option<Breadcrumbs> {
-    if cli.has_breadcrumbs {
-        return Some(Breadcrumbs {
-            separator: cli.breadcrumbs_separator.clone(),
-            font_family: cli.breadcrumbs_font_family.clone(),
-            color: cli
-                .breadcrumbs_color
-                .clone()
-                .unwrap_or(String::from("#80848b")),
-        });
-    }
-
-    None
+    cli.has_breadcrumbs.then(|| Breadcrumbs {
+        separator: cli.breadcrumbs_separator.clone(),
+        font_family: cli.breadcrumbs_font_family.clone(),
+        color: cli
+            .breadcrumbs_color
+            .clone()
+            .unwrap_or(String::from("#80848b")),
+    })
 }
 
 fn get_code_snippet(cli: &CLI) -> anyhow::Result<String> {
-    if cli.file.is_some() && cli.code.is_some() {
-        bail!("You can only specify one of the file or code option");
+    if let Some(ref file_path) = cli.from_file {
+        if !metadata(file_path)?.is_file() {
+            bail!("The file path is not a file");
+        }
+
+        return Ok(read_to_string(file_path)?);
     }
 
-    if cli.file.is_none() && cli.code.is_none() {
-        bail!("You must specify one of the file or code option");
-    }
-
-    match cli.file {
-        Some(ref file_path) => {
-            if !metadata(&file_path)?.is_file() {
-                bail!("The file path is not a file");
+    if let Some(ref code) = cli.from_code {
+        // Read code from pipe if the code option is "-"
+        return Ok(if code == STDIN_CODE_DEFAULT_CHAR {
+            // If input come from terminal, print help and exit
+            if stdin().is_terminal() {
+                CLI::command().print_help()?;
+                process::exit(2);
             }
 
-            Ok(read_to_string(file_path)?)
-        }
-        None => {
-            let code = cli.code.clone().unwrap();
+            let mut content = String::new();
 
-            // Read code from pipe if the code option is "-"
-            if code == STDIN_CODE_DEFAULT_CHAR {
-                // If input come from terminal, print help and exit
-                if stdin().is_terminal() {
-                    CLI::command().print_help()?;
-                    process::exit(2);
-                }
+            BufReader::new(stdin().lock()).read_to_string(&mut content)?;
 
-                let mut content = String::new();
-
-                BufReader::new(stdin().lock()).read_to_string(&mut content)?;
-
-                return Ok(content);
-            }
-
-            Ok(code)
-        }
+            content
+        } else {
+            code.clone()
+        });
     }
+
+    if cli.from_clipboard {
+        let content = Clipboard::new()?.read()?;
+
+        return Ok(content);
+    }
+
+    bail!("No code snippet provided");
 }

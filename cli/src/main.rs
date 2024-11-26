@@ -28,17 +28,26 @@ pub const STDIN_CODE_DEFAULT_CHAR: &'static str = "-";
 #[command(propagate_version = true)]
 struct CLI {
     /// Path to the file to snapshot
-    #[arg(short, long)]
-    file: Option<String>,
+    #[arg(short = 'f', long)]
+    from_file: Option<String>,
 
     /// Code snippet for snapshot
-    #[arg(short, long, default_missing_value = STDIN_CODE_DEFAULT_CHAR, require_equals=false, num_args=0..=1, value_parser=value_parser!(String), value_name="Code")]
-    code: Option<String>,
+    #[arg(short = 'c', long, default_missing_value = STDIN_CODE_DEFAULT_CHAR, require_equals=false, num_args=0..=1, value_parser=value_parser!(String), value_name="Code")]
+    from_code: Option<String>,
 
-    /// Output path for the snapshot, currently CodeSnap supports SVG format and PNG format
+    #[arg(long)]
+    from_clipboard: bool,
+
+    /// Output path for the snapshot.
+    /// Available value:
+    ///
+    /// - clipboard: Copy the snapshot to clipboard
+    /// - file path: Save the snapshot to the file path
+    ///
+    /// Currently CodeSnap supports SVG format and PNG format
     /// If output is directory, CodeSnap will generate a temporary file name to save the snapshot
     /// to the directory.
-    #[arg(short, long, default_value = "clipboard")]
+    #[arg(short, long)]
     output: String,
 
     /// Font family for the code snippet
@@ -161,12 +170,6 @@ struct CLI {
 
     #[arg(long)]
     config: Option<String>,
-}
-
-#[derive(Parser)]
-struct Args {
-    #[clap(short, long)]
-    output: String,
 }
 
 fn generate_snapshot() -> anyhow::Result<()> {
