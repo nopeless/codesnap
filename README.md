@@ -66,10 +66,10 @@ let snapshot = CodeSnap::default()
         .create_snapshot()?;
 
 // Save snapshot to file
-snapshot.save("output.png")?;
+snapshot.png_data()?.save("output.png")?;
 
 // Copy snapshot to clipboard 
-snapshot.copy_to_clipboard()?;
+snapshot.png_data()?.copy()?;
 ```
 
 Read more about [codesnap library]()
