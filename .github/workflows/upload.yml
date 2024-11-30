@@ -40,3 +40,18 @@ jobs:
           tar: unix
           zip: windows
           token: ${{ secrets.PAT }}
+
+  release-formula:
+    needs: upload-assets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+
+      - name: Update codesnap formula
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.PAT }}
+          repository: mistricky/homebrew-tap
+          event-type: release
+          client-payload: '{"version": "${{ github.event.release.tag_name }}", "formula_name": "codesnap", "formula_desc": "Pure Rust tool to generate beautiful code snapshots"}'
