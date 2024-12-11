@@ -21,6 +21,20 @@ Generally, you can directly use CLI tool provide by CodeSnap to generate code sn
 <img src="https://github.com/user-attachments/assets/b8c9490f-ce17-4881-9d36-72e9c17bf34b" width="580px" />
 
 
+## ✨ Features
+- **Fast**: Pure Rust tool, generate code snapshot from graphic engine directly.
+- **CLI tool**: CodeSnap provide a CLI tool for you to generate code snapshot directly from command line.
+- **Library**: CodeSnap also provide a library for you to integrate it into your own project.
+- **Line number**: Generate code snapshot with line number, it's really helpful if someone want to know the position of the code snippet.
+- **Watermark**: Watermark can help make your code snapshot more personalized and interesting.
+- **More beautiful themes**: The [Syntect](https://github.com/trishume/syntect) be treated as the syntax highlighterin CodeSnap, and it using [Sublime Text syntax definitions](https://www.sublimetext.com/docs/syntax.html#include-syntax) to highlight code, so basically you can use any theme that Sublime Text support.
+- **Scale**: You can scale your code snapshot with a specific scale factor, CodeSnap will generate treble size snapshot by default to ensure the quality of the snapshot.
+- **Beautiful background**: CodeSnap provide a beautiful background for your code snapshot, you can also customize the background color with solid color or gradient color.
+- **Multiple snapshot format**: CodeSnap support multiple snapshot format, you can save snapshot as PNG, SVG and even HTML, or you want try ASCII code snapshot :)
+- **Clipboard**: CodeSnap can copy snapshot to clipboard directly, or read code snippet from clipboard to generate snapshots.
+- **Breadcrumb**: CodeSnap provide a breadcrumb for you to share your code snapshot with code path, it's really helpful if others want to know where the code snippet comes from.
+
+
 ## Getting started
 CodeSnap provide two ways to use it, you can use it as a CLI tool or as a library in your own project.
 
