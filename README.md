@@ -82,7 +82,7 @@ CodeSnap::default()
 ```
 
 ## 🌰 Examples
-All examples can be found in [examples]().
+All examples can be found in [examples](https://github.com/mistricky/CodeSnap/tree/main/examples).
 
 ![hello](https://github.com/user-attachments/assets/99df51ff-0957-40bd-91d0-facbd46a0bec)
 
@@ -146,7 +146,7 @@ Or if you are using CLI tool, CodeSnap will generate a default config file for y
 }
 ```
 
-All configuration items can be found in [config.rs]
+All configuration items can be found in [config.rs](https://github.com/mistricky/CodeSnap/blob/main/core/src/config.rs)
 
 
 
