@@ -12,11 +12,14 @@
 
 ## CodeSnap
 > [!WARNING]  
-> This project is still in early stage, and may have some bugs
+> This project is still in early stage and may have some bugs
 
 CodeSnap is a pure Rust tool for generate beautiful code snapshots, it directly use graphic engine to generate snapshots, which means the entire process is just matter of computation and rendering, without need for network or something like browser-based rendering solution.
 
 Generally, you can directly use CLI tool provide by CodeSnap to generate code snapshots you want. Or CodeSnap also provide a library for you to integrate it into your own project, so you can generate code snapshots in your own way (See [Related projects](#) for more information).
+
+
+## 📷 Screenshots
 
 <img src="https://github.com/user-attachments/assets/b8c9490f-ce17-4881-9d36-72e9c17bf34b" width="580px" />
 
@@ -35,7 +38,7 @@ Generally, you can directly use CLI tool provide by CodeSnap to generate code sn
 - **Breadcrumb**: CodeSnap provide a breadcrumb for you to share your code snapshot with code path, it's really helpful if others want to know where the code snippet comes from.
 
 
-## Getting started
+## 💻 Getting started
 CodeSnap provide two ways to use it, you can use it as a CLI tool or as a library in your own project.
 
 ### CLI
@@ -61,8 +64,6 @@ codesnap -f ./code_snippet.hs -o "./output.png"
 codesnap -h
 ```
 
-Read more about [codesnap cli]()
-
 ### Library
 For library, add `CodeSnap` in your project using Cargo
 
@@ -73,22 +74,86 @@ cargo add codesnap
 Use `CodeSnap` builder to generate code snapshot:
 
 ```rust
-let snapshot = CodeSnap::default()
+CodeSnap::default()
         .code("fn main() { println!(\"Hello, world!\"); }")
         .watermark(WatermarkBuilder::default().content("CodeSnap").build()?)
         .build()?
-        .create_snapshot()?;
-
-// Save snapshot to file
-snapshot.png_data()?.save("output.png")?;
-
-// Copy snapshot to clipboard 
-snapshot.png_data()?.copy()?;
+        .create_snapshot()?.raw_data()?.copy()?;
 ```
 
-Read more about [codesnap library]()
+## 🌰 Examples
+All examples can be found in [examples]().
 
-## Related projects
+![hello](https://github.com/user-attachments/assets/99df51ff-0957-40bd-91d0-facbd46a0bec)
+
+
+
+## ⚙️ Configuration
+Codesnap can receive a JSON config as input, the config can be used to customize the snapshot, such as theme, background, watermark, etc.
+
+If you are using Library, you can mount config to `CodeSnap` builder:
+
+```rust
+CodeSnap::from_config("Your config")?;
+```
+
+Or if you are using CLI tool, CodeSnap will generate a default config file for you under `~/.config/CodeSnap`, you can modify the config file to customize the snapshot:
+
+```jsonc
+// Both "CaskaydiaCove Nerd Font" and "Pacifico" is pre-installed in CodeSnap, you can use them out of the box
+{
+  "window": {
+    "mac_window_bar": true,
+    "shadow": 20,
+    "margin": {
+      "x": 82,
+      "y": 82
+    }
+  },
+  "code": {
+    "font_family": "CaskaydiaCove Nerd Font",
+    // CodeSnap use candy theme by default, if you want to use other theme, please refer https://github.com/trishume/syntect
+    "theme": "candy"
+  },
+  "watermark": {
+    "content": "CodeSnap",
+    "font_family": "Pacifico",
+    "color": "#ffffff"
+  },
+  // If you want to use gradient color, you can provide stops like the following config
+  // But if you want to use solid color, you can just provide a color string like: 
+  // "background": "#6bcba5"
+  "background": {
+    "start": {
+      "x": 0,
+      "y": 0
+    },
+    "end": {
+      "x": "max",
+      "y": 0
+    },
+    "stops": [
+      {
+        "position": 0,
+        "color": "#6bcba5"
+      },
+      {
+        "position": 1,
+        "color": "#caf4c2"
+      }
+    ]
+  }
+}
+```
+
+All configuration items can be found in [config.rs]
+
+
+
+
+
+
+## ❤️ Related projects
 - [codesnap](https://github.com/mistricky/CodeSnap/tree/main/core)
 - [codesnap-cli](https://github.com/mistricky/CodeSnap/tree/main/cli)
 - [codesnap.nvim](https://github.com/mistricky/codesnap.nvim)
@@ -97,5 +162,5 @@ Read more about [codesnap library]()
 - codesnap.zed (Planning)
 
 
-## License
+## 📑 License
 MIT.
