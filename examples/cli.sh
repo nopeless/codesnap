@@ -13,7 +13,7 @@ codesnap -f "examples/cli.sh" -o clipboard --highlight-range "9:10"
 codesnap --from-clipboard -o clipboard
 
 # Generate ASCII code snapshot and copy to clipboard
-codesnap -f "examples/cli.sh" -o clipboard --ascii
+codesnap --type ascii -f "examples/cli.sh" -o clipboard
 
 # Generate code snapshot and save to file in PNG format 
 codesnap -f "examples/cli.sh" -o "./cli.png"
