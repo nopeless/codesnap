@@ -21,6 +21,16 @@ jobs:
 
       - name: Check commit message
         uses: wagoid/commitlint-github-action@v4
+        with:
+          configFile: commitlint.config.ts
+
+  code-style:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions-rs/cargo@v1
         with:
