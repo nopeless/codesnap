@@ -177,25 +177,6 @@ Copy screenshots directly into the clipboard is cool, however, it doesn't work w
 
 If you are using CodeSnap on wl-clipboard, you can refer [wl-clip-persist](https://github.com/Linus789/wl-clip-persist), it reads all the clipboard data into memory and then overwrites the clipboard with the data from our memory to persist copied data.
 
-### Save the snapshot
-
-Of course, you can use `CodeSnapSave` command to save the snapshot to path where you defined it in `config.save_path`
-```lua
-require("codesnap").setup({
-  -- The save_path must be ends with .png, unless when you specified a directory path,
-  -- CodeSnap will append an auto-generated filename to the specified directory path
-  -- For example:
-  -- save_path = "~/Pictures"
-  -- parsed: "~/Pictures/CodeSnap_y-m-d_at_h:m:s.png"
-  -- save_path = "~/Pictures/foo.png"
-  -- parsed: "~/Pictures/foo.png"
-  save_path = ...
-})
-```
-
-https://github.com/mistricky/codesnap.nvim/assets/22574136/69b27e77-3dce-4bc3-8516-89ce636fe02d
-
-
 
 ## ❤️ Related projects
 - [codesnap](https://github.com/mistricky/CodeSnap/tree/main/core)
