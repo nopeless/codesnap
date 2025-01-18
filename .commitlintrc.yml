@@ -1,14 +1,3 @@
-# import type {UserConfig} from '@commitlint/types'; 
-# import {RuleConfigSeverity} from '@commitlint/types';
-#
-# export default {
-#   
-#   extends: ["wizardoc"],
-#   rules: [
-#       "header-max-length": [RuleConfigSeverity.Error, "always", 100],
-#   ]
-# };
-
 extends:
   - wizardoc
 
