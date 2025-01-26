@@ -1,7 +1,14 @@
 use std::sync::Arc;
 
 use crate::{
-    config::{Border, SnapshotConfig, DEFAULT_WINDOW_MARGIN},
+    components::{
+        command_line::{
+            command_line_header::CommandLineHeader, command_line_output::CommandLineOutput,
+        },
+        interface::component::Component,
+        layout::{column::Column, row::Row},
+    },
+    config::{Border, CommandLine, RawCode, SnapshotConfig, DEFAULT_WINDOW_MARGIN},
     utils::{color::RgbaColor, theme_provider::ThemeProvider},
 };
 use tiny_skia::{Color, Pixmap};
@@ -17,7 +24,6 @@ use crate::{
         interface::component::ComponentContext,
         line_number::LineNumber,
         rect::Rect,
-        row::Row,
         watermark::Watermark,
     },
     edges::padding::Padding,
@@ -80,24 +86,124 @@ impl ImageSnapshot {
         Ok(parsed_svg_content)
     }
 
+    pub fn create_drawer_with_frame(
+        config: SnapshotConfig,
+        theme_provider: ThemeProvider,
+        window_padding: Padding,
+    ) -> Box<dyn Fn(Vec<Box<dyn Component>>) -> anyhow::Result<Pixmap>> {
+        Box::new(move |render_content| {
+            let editor_background_color = theme_provider.theme_background();
+            let context = ComponentContext {
+                scale_factor: config.scale_factor as f32,
+                take_snapshot_params: Arc::new(config.clone()),
+                theme_provider: theme_provider.clone(),
+            };
+            let background_padding = Padding::from(config.window.margin.clone());
+            let border_width = match config.window.border {
+                Some(_) => 1.,
+                None => 0.,
+            };
+            let border_rgba_color: RgbaColor = config
+                .window
+                .border
+                .clone()
+                .unwrap_or(Border {
+                    color: String::from("#ffffff30"),
+                })
+                .color
+                .as_str()
+                .into();
+
+            // If vertical background padding is less than 82., should hidden watermark component
+            // If watermark text is equal to "", the watermark component is hidden
+            let watermark = if background_padding.bottom >= DEFAULT_WINDOW_MARGIN {
+                config.watermark.clone()
+            } else {
+                None
+            };
+
+            let mut parsed_render_content: Vec<Box<dyn Component>> =
+                vec![Box::new(Row::from_children(vec![
+                    Box::new(MacTitleBar::new(config.window.mac_window_bar)),
+                    Box::new(Title::from_config(config.window.title.clone())),
+                ]))];
+
+            parsed_render_content.extend(render_content);
+
+            // Draw the image snapshot frame template
+            let pixmap = Container::from_children(vec![Box::new(Background::new(
+                background_padding,
+                vec![
+                    Box::new(
+                        Rect::create_with_border(
+                            12.,
+                            editor_background_color.into(),
+                            DEFAULT_WINDOW_MIN_WIDTH,
+                            window_padding.clone(),
+                            border_width,
+                            border_rgba_color.into(),
+                            parsed_render_content,
+                        )
+                        .shadow(
+                            0.,
+                            21.,
+                            config.window.shadow,
+                            Color::from_rgba8(0, 0, 0, 80),
+                        ),
+                    ),
+                    Box::new(Watermark::new(watermark)),
+                ],
+            ))])
+            .draw_root(&context)?;
+
+            Ok(pixmap)
+        })
+    }
+
+    pub fn raw_code_content(
+        window_padding: &Padding,
+        raw_code: &RawCode,
+    ) -> Vec<Box<dyn Component>> {
+        let code_lines = raw_code.content.lines().collect::<Vec<&str>>();
+
+        vec![
+            Box::new(Breadcrumbs::from_path(
+                raw_code.file_path.clone(),
+                raw_code.breadcrumbs.clone(),
+            )),
+            Box::new(CodeBlock::from_children(vec![
+                Box::new(HighlightCodeBlock::from(
+                    raw_code.highlight_lines.clone(),
+                    code_lines.len(),
+                    LINE_HEIGHT,
+                    window_padding.clone(),
+                )),
+                Box::new(LineNumber::new(raw_code.clone(), LINE_HEIGHT)),
+                Box::new(Code::new(raw_code.clone(), LINE_HEIGHT)),
+            ])),
+        ]
+    }
+
+    pub fn command_line_content(
+        config: SnapshotConfig,
+        window_padding: Padding,
+        command_line: &CommandLine,
+    ) -> Vec<Box<dyn Component>> {
+        command_line
+            .clone()
+            .output
+            .into_iter()
+            .map(|output| {
+                Box::new(Column::from_children(vec![
+                    Box::new(CommandLineHeader::from(&command_line, &output.full_command)),
+                    Box::new(CommandLineOutput::from(&output.content)),
+                ])) as Box<dyn Component>
+            })
+            .collect::<Vec<Box<dyn Component>>>()
+    }
+
     pub fn from_config(config: SnapshotConfig) -> anyhow::Result<Self> {
         let theme_provider = ThemeProvider::from_config(&config)?;
-        let editor_background_color = theme_provider.theme_background();
-        let context = ComponentContext {
-            scale_factor: config.scale_factor as f32,
-            take_snapshot_params: Arc::new(config.clone()),
-            theme_provider,
-        };
-        let code_lines = config.code.content.lines().collect::<Vec<&str>>();
-        let background_padding = Padding::from(config.window.margin);
-
-        // If vertical background padding is less than 82., should hidden watermark component
-        // If watermark text is equal to "", the watermark component is hidden
-        let watermark = if background_padding.bottom >= DEFAULT_WINDOW_MARGIN {
-            config.watermark.clone()
-        } else {
-            None
-        };
         let window_padding = Padding {
             top: if config.window.mac_window_bar {
                 14.
@@ -106,64 +212,19 @@ impl ImageSnapshot {
             },
             ..Padding::from_value(14.)
         };
-        // CodeSnap not support custom border width for now
-        let border_width = match config.window.border {
-            Some(_) => 1.,
-            None => 0.,
-        };
-        let border_rgba_color: RgbaColor = config
-            .window
-            .border
-            .unwrap_or(Border {
-                color: String::from("#ffffff30"),
-            })
-            .color
-            .as_str()
-            .into();
-        let pixmap = Container::from_children(vec![Box::new(Background::new(
-            background_padding,
-            vec![
-                Box::new(
-                    Rect::create_with_border(
-                        12.,
-                        editor_background_color.into(),
-                        DEFAULT_WINDOW_MIN_WIDTH,
-                        window_padding.clone(),
-                        border_width,
-                        border_rgba_color.into(),
-                        vec![
-                            Box::new(Row::from_children(vec![
-                                Box::new(MacTitleBar::new(config.window.mac_window_bar)),
-                                Box::new(Title::from_config(config.window.title)),
-                            ])),
-                            Box::new(Breadcrumbs::from_path(
-                                config.code.file_path.clone(),
-                                config.code.breadcrumbs.clone(),
-                            )),
-                            Box::new(CodeBlock::from_children(vec![
-                                Box::new(HighlightCodeBlock::from(
-                                    config.code.highlight_lines.clone(),
-                                    code_lines.len(),
-                                    LINE_HEIGHT,
-                                    window_padding,
-                                )),
-                                Box::new(LineNumber::new(config.code.clone(), LINE_HEIGHT)),
-                                Box::new(Code::new(&config.code.content, LINE_HEIGHT, 12.5)),
-                            ])),
-                        ],
-                    )
-                    .shadow(
-                        0.,
-                        21.,
-                        config.window.shadow,
-                        Color::from_rgba8(0, 0, 0, 80),
-                    ),
-                ),
-                Box::new(Watermark::new(watermark)),
-            ],
-        ))])
-        .draw_root(&context)?;
 
-        Ok(ImageSnapshot { pixmap })
+        let drawer =
+            Self::create_drawer_with_frame(config.clone(), theme_provider, window_padding.clone());
+        let pixmap =
+            match config.code {
+                crate::config::Code::Raw(ref raw_code) => {
+                    drawer(Self::raw_code_content(&window_padding, raw_code))
+                }
+                crate::config::Code::Command(ref command_line) => drawer(
+                    Self::command_line_content(config.clone(), window_padding, command_line),
+                ),
+            }?;
+
+        Ok(Self { pixmap })
     }
 }

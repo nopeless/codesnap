@@ -192,22 +192,47 @@ pub struct LineNumber {
 }
 
 #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
-pub struct Code {
+pub struct CommandLineContent {
     #[builder(setter(into))]
+    pub content: String,
+
+    #[builder(setter(into))]
+    pub full_command: String,
+}
+
+#[derive(Clone, Builder, Serialize, Deserialize, Debug)]
+pub struct CommandLine {
+    #[builder(setter(into))]
+    pub output: Vec<CommandLineContent>,
+
+    #[builder(setter(into), default = String::from("❯"))]
+    pub prompt: String,
+
+    #[builder(setter(into), default = String::from("CaskaydiaCove Nerd Font"))]
+    pub font_family: String,
+
+    #[builder(setter(into), default = String::from("#F78FB3"))]
+    pub prompt_color: String,
+
+    #[builder(setter(into), default = String::from("#98C379"))]
+    pub command_color: String,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+#[serde(untagged)]
+pub enum Code {
+    Raw(RawCode),
+    Command(CommandLine),
+}
+
+#[derive(Clone, Builder, Serialize, Deserialize, Debug, Default)]
+pub struct RawCode {
+    #[builder(setter(into), default = String::from(""))]
     #[serde(default)]
     pub content: String,
 
     #[builder(setter(into), default = String::from("CaskaydiaCove Nerd Font"))]
     pub font_family: String,
-
-    /// CodeSnap use Syntect as the syntax highlighting engine, you can provide a custom theme
-    /// for code highlighting and background.
-    /// The theme is load from the `themes_folder`(if not provided, CodeSnap load the default
-    /// themes), you can use the theme name to specify the theme you want to use.
-    ///
-    /// See `themes_folder` config for more detail.
-    #[builder(setter(into), default = String::from("candy"))]
-    pub theme: String,
 
     /// Breadcrumbs is a useful and unique feature of CodeSnap, it can help users to understand the
     /// code location in the project. If the `has_breadcrumbs` is true, CodeSnap will display the
@@ -217,9 +242,11 @@ pub struct Code {
     /// about the code, such as the file path, the line number and highlight code line, these
     /// information can help users to understand the code better.
     #[builder(setter(into, strip_option), default = None)]
+    #[serde(default)]
     pub breadcrumbs: Option<Breadcrumbs>,
 
     #[builder(setter(into, strip_option), default = None)]
+    #[serde(default)]
     pub line_number: Option<LineNumber>,
 
     #[builder(setter(into), default = vec![])]
@@ -235,12 +262,11 @@ pub struct Code {
     pub file_path: Option<String>,
 }
 
-impl CodeBuilder {
-    pub fn from_code(code: Code) -> CodeBuilder {
-        CodeBuilder {
+impl RawCodeBuilder {
+    pub fn from_code(code: RawCode) -> RawCodeBuilder {
+        RawCodeBuilder {
             content: Some(code.content),
             font_family: Some(code.font_family),
-            theme: Some(code.theme),
             breadcrumbs: Some(code.breadcrumbs),
             line_number: Some(code.line_number),
             highlight_lines: Some(code.highlight_lines),
@@ -316,6 +342,15 @@ pub struct SnapshotConfig {
     #[builder(setter(into, strip_option), default = None)]
     pub fonts_folder: Option<String>,
 
+    /// CodeSnap use Syntect as the syntax highlighting engine, you can provide a custom theme
+    /// for code highlighting and background.
+    /// The theme is load from the `themes_folder`(if not provided, CodeSnap load the default
+    /// themes), you can use the theme name to specify the theme you want to use.
+    ///
+    /// See `themes_folder` config for more detail.
+    #[builder(setter(into), default = String::from("candy"))]
+    pub theme: String,
+
     #[builder(setter(into), default = BAMBOO.clone())]
     pub background: Background,
 }
@@ -328,12 +363,6 @@ impl CodeSnap {
             }
         }
 
-        if let Some(ref code) = self.code {
-            if code.content.is_empty() {
-                return Err("The content of the code should not be empty".to_string());
-            }
-        }
-
         Ok(())
     }
 
@@ -343,12 +372,19 @@ impl CodeSnap {
 
     pub fn map_code<F>(&mut self, f: F) -> anyhow::Result<&mut Self>
     where
-        F: Fn(Code) -> anyhow::Result<Code>,
+        F: Fn(RawCode) -> anyhow::Result<Code>,
     {
-        self.code = Some(f(self
-            .code
-            .clone()
-            .unwrap_or(CodeBuilder::default().content("").build()?))?);
+        let code = self.code.clone().unwrap_or(Code::Raw(
+            RawCodeBuilder::default()
+                .content(String::from(""))
+                .build()?,
+        ));
+        let raw_code = match code {
+            Code::Raw(raw_code) => raw_code,
+            _ => return Ok(self),
+        };
+
+        self.code = Some(f(raw_code)?);
 
         Ok(self)
     }
@@ -377,7 +413,7 @@ impl CodeSnap {
 
 impl SnapshotConfig {
     /// Create a beautiful code snapshot from the config
-    pub fn create_snapshot(&self) -> anyhow::Result<ImageSnapshot, anyhow::Error> {
+    pub fn create_snapshot(&self) -> anyhow::Result<ImageSnapshot> {
         ImageSnapshot::from_config(self.clone())
     }
 
@@ -393,7 +429,7 @@ impl SnapshotConfig {
     /// code block, most markdown renderers will highlight the code block for you.
     ///
     /// The ASCII "snapshot" is really cool, hope you like it!
-    pub fn create_ascii_snapshot(&self) -> ASCIISnapshot {
+    pub fn create_ascii_snapshot(&self) -> anyhow::Result<ASCIISnapshot> {
         ASCIISnapshot::from_config(self.clone())
     }
 }

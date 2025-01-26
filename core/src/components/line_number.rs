@@ -4,9 +4,12 @@ use super::interface::{
     style::{ComponentStyle, RawComponentStyle, Size, Style},
 };
 use crate::{
+    config::RawCode,
     edges::margin::Margin,
-    utils::text::FontRenderer,
-    utils::{code::CHAR_WIDTH, text::create_file_system_by_fonts_folder},
+    utils::{
+        code::CHAR_WIDTH,
+        text::{create_file_system_by_fonts_folder, FontRenderer},
+    },
 };
 use cosmic_text::{Attrs, Color, Family};
 
@@ -19,6 +22,7 @@ pub struct LineNumber {
     render_condition: bool,
     line_number_content: Vec<String>,
     number_of_digit: usize,
+    raw_code: RawCode,
 }
 
 impl Component for LineNumber {
@@ -65,7 +69,7 @@ impl Component for LineNumber {
                 &self.line_number_content.join("\n"),
                 Attrs::new()
                     .color(Color::rgb(73, 81, 98))
-                    .family(Family::Name(&context.take_snapshot_params.code.font_family)),
+                    .family(Family::Name(&self.raw_code.font_family)),
             )],
             pixmap,
         );
@@ -75,11 +79,11 @@ impl Component for LineNumber {
 }
 
 impl LineNumber {
-    pub fn new(code: crate::config::Code, line_height: f32) -> LineNumber {
-        match code.line_number {
+    pub fn new(raw_code: RawCode, line_height: f32) -> LineNumber {
+        match raw_code.line_number {
             None => LineNumber::default(),
-            Some(line_number) => {
-                let lines = code.content.split("\n").collect::<Vec<&str>>();
+            Some(ref line_number) => {
+                let lines = raw_code.content.split("\n").collect::<Vec<&str>>();
                 let start_line_number = line_number.start_number;
                 let max_line_number = lines.len() as u32 + start_line_number;
                 let number_of_digit = (max_line_number - 1).to_string().len();
@@ -98,6 +102,7 @@ impl LineNumber {
                     children: vec![],
                     render_condition: true,
                     line_height,
+                    raw_code,
                 }
             }
         }

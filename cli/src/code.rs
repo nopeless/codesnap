@@ -1,44 +1,92 @@
 use std::{
     fs::{metadata, read_to_string},
     io::{stdin, BufReader, IsTerminal, Read},
-    process,
+    process::{self, Command},
 };
 
 use anyhow::bail;
 use clap::CommandFactory;
 use codesnap::{
-    config::{Breadcrumbs, Code, CodeBuilder, HighlightLine, LineNumberBuilder},
+    config::{
+        Breadcrumbs, Code, CommandLineBuilder, CommandLineContent, CommandLineContentBuilder,
+        HighlightLine, LineNumberBuilder, RawCode, RawCodeBuilder,
+    },
     utils::clipboard::Clipboard,
 };
 
 use crate::{highlight::HighlightLineRange, range::Range, CLI, STDIN_CODE_DEFAULT_CHAR};
 
-pub fn create_code(cli: &CLI, config_code: Code) -> anyhow::Result<Code> {
-    let range = Range::from_opt_string(cli.range.clone())?;
-    let code_snippet = get_code_snippet(cli)?;
-    let parsed_range = range.parse_range(&code_snippet)?;
-    let parsed_code_snippet = parsed_range.cut_code_snippet(&code_snippet)?;
-    let mut code_builder = CodeBuilder::from_code(config_code.clone());
-    let mut code = code_builder.content(&parsed_code_snippet).build()?;
+pub fn create_code(cli: &CLI, raw_code: RawCode) -> anyhow::Result<Code> {
+    let code = match cli.execute[..] {
+        [] => {
+            let range = Range::from_opt_string(cli.range.clone())?;
+            let code_snippet = get_code_snippet(cli)?;
+            let parsed_range = range.parse_range(&code_snippet)?;
+            let parsed_code_snippet = parsed_range.cut_code_snippet(&code_snippet)?;
+            let mut code = RawCodeBuilder::from_code(raw_code.clone())
+                .content(&parsed_code_snippet)
+                .build()?;
 
-    code.line_number = cli.has_line_number.then(|| {
-        LineNumberBuilder::default()
-            .start_number(parsed_range.0 as u32)
-            .color(cli.line_number_color.clone())
-            .build()
-            .unwrap()
-    });
-    code.theme = cli.code_theme.clone().unwrap_or(config_code.theme);
-    code.font_family = cli
-        .code_font_family
-        .clone()
-        .unwrap_or(config_code.font_family);
-    code.file_path = cli.from_file.clone().or(config_code.file_path);
-    code.language = cli.language.clone().or(config_code.language);
-    code.breadcrumbs = create_breadcrumbs(&cli).or(config_code.breadcrumbs);
-    code.highlight_lines = create_highlight_lines(&cli, parsed_range, &code_snippet)?;
+            code.line_number = cli.has_line_number.then(|| {
+                LineNumberBuilder::default()
+                    .start_number(parsed_range.0 as u32)
+                    .color(cli.line_number_color.clone())
+                    .build()
+                    .unwrap()
+            });
+            code.font_family = cli.code_font_family.clone().unwrap_or(raw_code.font_family);
+            code.file_path = cli.from_file.clone().or(raw_code.file_path);
+            code.language = cli.language.clone().or(raw_code.language);
+            code.breadcrumbs = create_breadcrumbs(&cli).or(raw_code.breadcrumbs);
+            code.highlight_lines = create_highlight_lines(&cli, parsed_range, &code_snippet)?;
+
+            Code::Raw(code)
+        }
+        _ => {
+            let commands = cli
+                .execute
+                .clone()
+                .into_iter()
+                .map(|command| {
+                    let output = execute_command(&command);
+
+                    CommandLineContentBuilder::default()
+                        .full_command(&command)
+                        .content(output)
+                        .build()
+                        .unwrap()
+                })
+                .collect::<Vec<CommandLineContent>>();
+
+            let command_line = CommandLineBuilder::default().output(commands).build()?;
+
+            Code::Command(command_line)
+        }
+    };
 
     Ok(code)
+}
+
+fn execute_command(command: &str) -> String {
+    let output = if cfg!(target_os = "windows") {
+        Command::new("cmd")
+            .args(["/C", command])
+            .output()
+            .expect("failed to execute process")
+    } else {
+        Command::new("sh")
+            .arg("-c")
+            .arg(command)
+            .output()
+            .expect("failed to execute process")
+    };
+    let msg = if !output.status.success() {
+        output.stderr
+    } else {
+        output.stdout
+    };
+
+    String::from_utf8_lossy(&msg).into_owned()
 }
 
 fn create_highlight_lines(
