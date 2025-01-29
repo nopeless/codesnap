@@ -127,13 +127,13 @@ pub struct Margin {
     pub y: f32,
 }
 
-#[derive(Clone, Builder, Serialize, Deserialize, Debug)]
+#[derive(Clone, Builder, Serialize, Deserialize, Debug, Default)]
 pub struct Breadcrumbs {
-    #[builder(setter(into, strip_option), default = None)]
-    pub separator: Option<String>,
+    #[builder(setter(into, strip_option), default = String::from("/"))]
+    pub separator: String,
 
-    #[builder(setter(into, strip_option), default = Some(String::from("CaskaydiaCove Nerd Font")))]
-    pub font_family: Option<String>,
+    #[builder(setter(into, strip_option), default = String::from("CaskaydiaCove Nerd Font"))]
+    pub font_family: String,
 
     #[builder(setter(into), default = String::from("#80848b"))]
     pub color: String,
@@ -141,20 +141,23 @@ pub struct Breadcrumbs {
 
 #[derive(Clone, Builder, Default, Serialize, Deserialize, Debug)]
 pub struct Border {
-    #[builder(setter(into))]
+    #[builder(setter(into), default = String::from("#ffffff30"))]
     pub color: String,
+
+    #[builder(setter(into), default = 1.)]
+    pub width: f32,
 }
 
 #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
 pub struct Window {
-    #[builder(setter(into, strip_option), default = Margin {x : DEFAULT_WINDOW_MARGIN, y: DEFAULT_WINDOW_MARGIN})]
+    #[builder(setter(into), default = MarginBuilder::default().build().unwrap())]
     pub margin: Margin,
 
     #[builder(setter(into), default = None)]
     pub title: Option<TitleConfig>,
 
-    #[builder(setter(into, strip_option), default = Some(Border { color: String::from("#ffffff30") }))]
-    pub border: Option<Border>,
+    #[builder(setter(into), default = BorderBuilder::default().build().unwrap())]
+    pub border: Border,
 
     #[builder(default = true)]
     pub mac_window_bar: bool,
@@ -182,14 +185,14 @@ pub enum HighlightLine {
     Range(u32, u32, String),
 }
 
-#[derive(Clone, Builder, Serialize, Deserialize, Debug)]
-pub struct LineNumber {
-    #[builder(setter(into))]
-    pub start_number: u32,
-
-    #[builder(setter(into), default = String::from("#495162"))]
-    pub color: String,
-}
+// #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
+// pub struct LineNumber {
+//     #[builder(setter(into))]
+//     pub start_number: u32,
+//
+//     #[builder(setter(into), default = String::from("#495162"))]
+//     pub color: String,
+// }
 
 #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
 pub struct CommandLineContent {
@@ -201,10 +204,31 @@ pub struct CommandLineContent {
 }
 
 #[derive(Clone, Builder, Serialize, Deserialize, Debug)]
-pub struct CommandLine {
+pub struct Code {
     #[builder(setter(into))]
-    pub output: Vec<CommandLineContent>,
+    pub content: String,
 
+    #[builder(default = false)]
+    pub has_breadcrumbs: bool,
+
+    #[builder(setter(into, strip_option), default = None)]
+    pub start_line_number: Option<u32>,
+
+    #[builder(setter(into), default = vec![])]
+    #[serde(default)]
+    pub highlight_lines: Vec<HighlightLine>,
+
+    /// The `language` will be used to determine the syntax highlighting to use for generating
+    /// the snapshot.
+    #[builder(setter(into, strip_option), default = None)]
+    pub language: Option<String>,
+
+    #[builder(setter(into, strip_option), default = None)]
+    pub file_path: Option<String>,
+}
+
+#[derive(Clone, Builder, Serialize, Deserialize, Debug, Default)]
+pub struct CommandOutputConfig {
     #[builder(setter(into), default = String::from("❯"))]
     pub prompt: String,
 
@@ -220,17 +244,16 @@ pub struct CommandLine {
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(untagged)]
-pub enum Code {
-    Raw(RawCode),
-    Command(CommandLine),
+pub enum Content {
+    Code(Code),
+    CommandOutput(Vec<CommandLineContent>),
 }
 
 #[derive(Clone, Builder, Serialize, Deserialize, Debug, Default)]
-pub struct RawCode {
-    #[builder(setter(into), default = String::from(""))]
-    #[serde(default)]
-    pub content: String,
-
+pub struct CodeConfig {
+    // #[builder(setter(into), default = String::from(""))]
+    // #[serde(default)]
+    // pub content: String,
     #[builder(setter(into), default = String::from("CaskaydiaCove Nerd Font"))]
     pub font_family: String,
 
@@ -241,40 +264,24 @@ pub struct RawCode {
     /// The code snapshot is different from normal screenshots, it should provide more information
     /// about the code, such as the file path, the line number and highlight code line, these
     /// information can help users to understand the code better.
-    #[builder(setter(into, strip_option), default = None)]
+    #[builder(setter(into, strip_option), default = Breadcrumbs::default())]
     #[serde(default)]
-    pub breadcrumbs: Option<Breadcrumbs>,
-
-    #[builder(setter(into, strip_option), default = None)]
-    #[serde(default)]
-    pub line_number: Option<LineNumber>,
-
-    #[builder(setter(into), default = vec![])]
-    #[serde(default)]
-    pub highlight_lines: Vec<HighlightLine>,
-
-    /// The `language` will be used to determine the syntax highlighting to use for generating
-    /// the snapshot.
-    #[builder(setter(into, strip_option), default = None)]
-    pub language: Option<String>,
-
-    #[builder(setter(into, strip_option), default = None)]
-    pub file_path: Option<String>,
+    pub breadcrumbs: Breadcrumbs,
 }
 
-impl RawCodeBuilder {
-    pub fn from_code(code: RawCode) -> RawCodeBuilder {
-        RawCodeBuilder {
-            content: Some(code.content),
-            font_family: Some(code.font_family),
-            breadcrumbs: Some(code.breadcrumbs),
-            line_number: Some(code.line_number),
-            highlight_lines: Some(code.highlight_lines),
-            language: Some(code.language),
-            file_path: Some(code.file_path),
-        }
-    }
-}
+// impl RawCodeBuilder {
+//     pub fn from_code(code: RawCode) -> RawCodeBuilder {
+//         RawCodeBuilder {
+//             content: Some(code.content),
+//             font_family: Some(code.font_family),
+//             breadcrumbs: Some(code.breadcrumbs),
+//             line_number: Some(code.line_number),
+//             highlight_lines: Some(code.highlight_lines),
+//             language: Some(code.language),
+//             file_path: Some(code.file_path),
+//         }
+//     }
+// }
 
 /// Draw a watermark below the code, you can use this to add a logo or any other text
 /// The watermark is designed as a place for users to provide personalize label
@@ -312,11 +319,17 @@ pub struct SnapshotConfig {
     pub window: Window,
 
     /// The code to be displayed in the snapshot
-    #[builder(setter(into))]
-    pub code: Code,
+    #[builder(setter(into), default = CommandOutputConfigBuilder::default().build().unwrap())]
+    pub command_output_config: CommandOutputConfig,
+
+    #[builder(setter(into), default = CodeConfigBuilder::default().build().unwrap())]
+    pub code_config: CodeConfig,
 
     #[builder(setter(into), default = None)]
     pub watermark: Option<Watermark>,
+
+    #[builder(setter(into))]
+    pub content: Content,
 
     /// CodeSnap default generate triple size snapshot image,
     /// you can use this config to change the scale factor.
@@ -370,24 +383,24 @@ impl CodeSnap {
         serde_json::from_str::<CodeSnap>(config)
     }
 
-    pub fn map_code<F>(&mut self, f: F) -> anyhow::Result<&mut Self>
-    where
-        F: Fn(RawCode) -> anyhow::Result<Code>,
-    {
-        let code = self.code.clone().unwrap_or(Code::Raw(
-            RawCodeBuilder::default()
-                .content(String::from(""))
-                .build()?,
-        ));
-        let raw_code = match code {
-            Code::Raw(raw_code) => raw_code,
-            _ => return Ok(self),
-        };
-
-        self.code = Some(f(raw_code)?);
-
-        Ok(self)
-    }
+    // pub fn map_code<F>(&mut self, f: F) -> anyhow::Result<&mut Self>
+    // where
+    //     F: Fn(RawCode) -> anyhow::Result<Code>,
+    // {
+    //     let code = self.code.clone().unwrap_or(Code::Raw(
+    //         RawCodeBuilder::default()
+    //             .content(String::from(""))
+    //             .build()?,
+    //     ));
+    //     let raw_code = match code {
+    //         Code::Raw(raw_code) => raw_code,
+    //         _ => return Ok(self),
+    //     };
+    //
+    //     self.code = Some(f(raw_code)?);
+    //
+    //     Ok(self)
+    // }
 
     pub fn map_window<F>(&mut self, f: F) -> anyhow::Result<&mut Self>
     where
