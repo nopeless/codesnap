@@ -1,5 +1,5 @@
-use super::interface::{
-    component::Component,
+use crate::components::interface::{
+    component::{Component, ComponentContext},
     style::{ComponentAlign, RawComponentStyle, Style},
 };
 
@@ -12,7 +12,7 @@ impl Component for Row {
         &self.children
     }
 
-    fn style(&self) -> RawComponentStyle {
+    fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
         Style::default().align(ComponentAlign::Row)
     }
 }

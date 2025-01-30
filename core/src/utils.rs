@@ -5,6 +5,7 @@ pub mod color;
 pub mod helpers;
 pub mod highlight;
 pub mod path;
+pub mod syntax_provider;
 pub mod text;
 pub mod theme;
 pub mod theme_provider;

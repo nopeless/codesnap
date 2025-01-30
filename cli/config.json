@@ -1,4 +1,5 @@
 {
+  "theme": "candy",
   "window": {
     "mac_window_bar": true,
     "shadow": 20,
@@ -8,8 +9,7 @@
     }
   },
   "code": {
-    "font_family": "CaskaydiaCove Nerd Font",
-    "theme": "candy"
+    "font_family": "CaskaydiaCove Nerd Font"
   },
   "watermark": {
     "content": "CodeSnap",

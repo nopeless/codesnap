@@ -21,7 +21,7 @@ impl Component for MacTitleBar {
         &self.children
     }
 
-    fn style(&self) -> RawComponentStyle {
+    fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
         let demeter = RADIUS * 2.;
 
         Style::default()
@@ -32,7 +32,7 @@ impl Component for MacTitleBar {
             })
     }
 
-    fn render_condition(&self) -> bool {
+    fn render_condition(&self, _context: &ComponentContext) -> bool {
         return self.render_condition;
     }
 

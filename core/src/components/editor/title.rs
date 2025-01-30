@@ -24,11 +24,11 @@ impl Component for Title {
         &self.children
     }
 
-    fn render_condition(&self) -> bool {
+    fn render_condition(&self, _context: &ComponentContext) -> bool {
         self.config.is_some()
     }
 
-    fn style(&self) -> RawComponentStyle {
+    fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
         let calced_title_width = 6. * self.config.clone().unwrap().title.len() as f32;
 
         RawComponentStyle::default()

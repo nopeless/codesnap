@@ -53,21 +53,17 @@ impl ComponentRenderParams {
 pub trait Component {
     fn children(&self) -> &Vec<Box<dyn Component>>;
 
-    fn align(&self) -> ComponentAlign {
-        ComponentAlign::Row
-    }
-
-    fn initialize(&self, render_params: &RenderParams) -> RenderParams {
+    fn define_render_params(&self, render_params: &RenderParams) -> RenderParams {
         render_params.clone()
     }
 
     // The render_condition determines whether the component should be rendered or not
-    fn render_condition(&self) -> bool {
+    fn render_condition(&self, _context: &ComponentContext) -> bool {
         true
     }
 
     // The difference with render_condition is that self_render_condition still renders childrens
-    fn self_render_condition(&self) -> bool {
+    fn self_render_condition(&self, _context: &ComponentContext) -> bool {
         true
     }
 
@@ -82,7 +78,7 @@ pub trait Component {
         Ok(())
     }
 
-    fn style(&self) -> RawComponentStyle {
+    fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
         RawComponentStyle::default()
     }
 
@@ -94,21 +90,25 @@ pub trait Component {
         }
     }
 
-    fn parsed_style(&self, parent_style: Option<&ComponentStyle>) -> Style<f32> {
+    fn parsed_style(
+        &self,
+        parent_style: Option<&ComponentStyle>,
+        context: &ComponentContext,
+    ) -> Style<f32> {
         // If render_condition return false, the whole component shouldn't rendered,
         // includes its children
-        if !self.render_condition() {
+        if !self.render_condition(context) {
             return ComponentStyle::default();
         }
 
         // If self_render_condition return false, the component shouldn't rendered,
         // so the corresponding style should be cleared
-        let style = if self.self_render_condition() {
-            self.style()
+        let style = if self.self_render_condition(context) {
+            self.style(context)
         } else {
             RawComponentStyle::default()
         };
-        let (width, height) = self.get_dynamic_wh();
+        let (width, height) = self.get_dynamic_wh(context);
         let width = self.parse_size(style.width, width, parent_style.map(|s| s.width))
             + style.padding.horizontal()
             + style.margin.horizontal();
@@ -137,8 +137,8 @@ pub trait Component {
         parent_style: ComponentStyle,
         sibling_style: ComponentStyle,
     ) -> render_error::Result<RenderParams> {
-        let style = self.parsed_style(Some(&parent_style));
-        let render_params = self.initialize(
+        let style = self.parsed_style(Some(&parent_style), &context);
+        let render_params = self.define_render_params(
             &component_render_params.parse_into_render_params_with_style(
                 parent_style.clone(),
                 sibling_style.clone(),
@@ -147,11 +147,11 @@ pub trait Component {
         );
 
         // Render nothing on paint if render_condition return false
-        if !self.render_condition() {
+        if !self.render_condition(context) {
             return Ok(render_params.clone());
         }
 
-        if self.self_render_condition() {
+        if self.self_render_condition(context) {
             self.draw_self(pixmap, context, &render_params, &style, &parent_style)?;
         }
 
@@ -173,7 +173,7 @@ pub trait Component {
                 style.clone(),
                 sibling_style,
             )?;
-            sibling_style = child.parsed_style(Some(&style.clone()));
+            sibling_style = child.parsed_style(Some(&style), &context);
         }
 
         Ok(render_params.clone())
@@ -181,26 +181,35 @@ pub trait Component {
 
     // Dynamic calculate width and height of children, if the children is empty, get_dynamic_wh
     // will return (0., 0.)
-    fn get_dynamic_wh(&self) -> (f32, f32) {
+    fn get_dynamic_wh(&self, context: &ComponentContext) -> (f32, f32) {
         let children = self.children();
-        let calc_children_wh = |cb: fn((f32, f32), &Box<dyn Component>) -> (f32, f32)| {
-            children.iter().fold((0., 0.), cb)
-        };
-        let style = self.style();
 
+        fn calc_row(
+            acc: (f32, f32),
+            child: &Box<dyn Component>,
+            context: &ComponentContext,
+        ) -> (f32, f32) {
+            let style = child.parsed_style(None, context);
+            (acc.0 + style.width, acc.1.max(style.height))
+        }
+
+        fn calc_column(
+            acc: (f32, f32),
+            child: &Box<dyn Component>,
+            context: &ComponentContext,
+        ) -> (f32, f32) {
+            let style = child.parsed_style(None, context);
+            (acc.0.max(style.width), acc.1 + style.height)
+        }
+
+        let style = self.style(&context);
         match style.align {
-            // If align is row, width is sum of children width, height is max of children height
-            ComponentAlign::Row => calc_children_wh(|(w, h), child| {
-                let style = child.parsed_style(None);
-
-                (w + style.width, h.max(style.height))
-            }),
-            // If align is column, width is max of children width, height is sum of children height
-            ComponentAlign::Column => calc_children_wh(|(w, h), child| {
-                let style = child.parsed_style(None);
-
-                (w.max(style.width), h + style.height)
-            }),
+            ComponentAlign::Row => children
+                .iter()
+                .fold((0., 0.), |acc, child| calc_row(acc, child, context)),
+            ComponentAlign::Column => children
+                .iter()
+                .fold((0., 0.), |acc, child| calc_column(acc, child, context)),
         }
     }
 }

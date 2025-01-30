@@ -20,6 +20,7 @@ impl Highlight {
         }
     }
 
+    // Parse Syntect Highlightlines to Cosmic Text span Attrs
     pub fn parse(
         &self,
         highlight: &mut HighlightLines,

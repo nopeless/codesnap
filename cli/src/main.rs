@@ -55,6 +55,9 @@ struct CLI {
     #[arg(short, long)]
     output: String,
 
+    #[arg(long, short, num_args=1..)]
+    execute: Vec<String>,
+
     /// You can set the range of the code snippet to display
     /// for example, display the 3rd to 5th:
     /// 3:5
@@ -70,8 +73,8 @@ struct CLI {
     code_font_family: Option<String>,
 
     /// Code theme for the code snippet
-    #[arg(long)]
-    code_theme: Option<String>,
+    #[arg(long, default_value = "candy")]
+    code_theme: String,
 
     /// Breadcrumbs is a useful and unique feature in CodeSnap, it shows the path of the file
     /// so that users can know where the code snippet comes from.
@@ -224,7 +227,7 @@ fn output_snapshot(cli: &CLI, snapshot: &SnapshotConfig) -> anyhow::Result<Strin
     if cli.output == "clipboard" {
         match cli.r#type.as_str() {
             "ascii" => {
-                snapshot.create_ascii_snapshot().raw_data()?.copy()?;
+                snapshot.create_ascii_snapshot()?.raw_data()?.copy()?;
             }
             "image" => {
                 snapshot.create_snapshot()?.raw_data()?.copy()?;
@@ -288,7 +291,7 @@ fn create_snapshot_config(cli: &CLI) -> anyhow::Result<SnapshotConfig> {
 
     // Build screenshot config
     let mut codesnap = codesnap_default
-        .map_code(|code| create_code(&cli, code))?
+        .map_code(|raw_code| create_code(&cli, raw_code))?
         .map_watermark(|watermark| create_watermark(&cli, watermark))?
         .map_window(|window| create_window(&cli, window))?
         .scale_factor(cli.scale_factor)
@@ -296,6 +299,7 @@ fn create_snapshot_config(cli: &CLI) -> anyhow::Result<SnapshotConfig> {
 
     codesnap.themes_folder = cli.themes_folder.clone().or(codesnap.themes_folder);
     codesnap.fonts_folder = cli.fonts_folder.clone().or(codesnap.fonts_folder);
+    codesnap.theme = cli.code_theme.clone();
 
     Ok(codesnap)
 }

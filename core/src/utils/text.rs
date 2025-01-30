@@ -1,6 +1,6 @@
 use cosmic_text::{
-    Align, Attrs, AttrsList, Buffer, BufferLine, Color, FontSystem, LineEnding, Metrics, Shaping,
-    SwashCache,
+    Align, Attrs, AttrsList, Buffer, BufferLine, Color, FontSystem, LayoutRunIter, LineEnding,
+    Metrics, Shaping, SwashCache,
 };
 use tiny_skia::{Paint, Pixmap, Rect, Transform};
 
@@ -36,6 +36,7 @@ impl FontRenderer {
         pixmap: &mut Pixmap,
     ) {
         let mut buffer = Buffer::new(&mut self.font_system, self.metrics);
+
         buffer.set_size(
             &mut self.font_system,
             Some(w * self.scale_factor),
@@ -47,6 +48,7 @@ impl FontRenderer {
             Attrs::new(),
             Shaping::Advanced,
         );
+
         self.draw(x, y, &mut buffer, pixmap);
     }
 
