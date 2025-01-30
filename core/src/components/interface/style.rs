@@ -6,6 +6,7 @@ pub enum ComponentAlign {
     Column,
 }
 
+#[derive(Clone, Debug)]
 pub enum Size {
     Dynamic,
     Inherit,

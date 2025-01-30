@@ -1,11 +1,7 @@
-use crate::{
-    config::HighlightLine,
-    edges::{edge::Edge, padding::Padding},
-    utils::color::RgbaColor,
-};
+use crate::{config::HighlightLine, edges::padding::Padding, utils::color::RgbaColor};
 
 use super::interface::{
-    component::{Component, RenderParams},
+    component::{Component, ComponentContext, RenderParams},
     style::ComponentStyle,
 };
 use tiny_skia::{Paint, Rect, Transform};
@@ -24,7 +20,7 @@ impl Component for HighlightCodeBlock {
         &self.children
     }
 
-    fn render_condition(&self) -> bool {
+    fn render_condition(&self, _context: &ComponentContext) -> bool {
         self.highlight_lines.len() > 0
     }
 

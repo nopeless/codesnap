@@ -64,11 +64,11 @@ impl Component for Watermark {
         &self.children
     }
 
-    fn render_condition(&self) -> bool {
+    fn render_condition(&self, _context: &ComponentContext) -> bool {
         self.config.is_some()
     }
 
-    fn style(&self) -> RawComponentStyle {
+    fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
         let default_style = RawComponentStyle::default();
 
         match &self.config {

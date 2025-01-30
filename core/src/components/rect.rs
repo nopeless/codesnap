@@ -34,7 +34,7 @@ impl Component for Rect {
         &self.children
     }
 
-    fn style(&self) -> RawComponentStyle {
+    fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
         Style::default()
             .min_width(self.min_width)
             .align(ComponentAlign::Column)

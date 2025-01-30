@@ -1,7 +1,7 @@
 use std::cmp::max;
 
 use crate::{
-    config::{Code, RawCode, SnapshotConfig},
+    config::{Code, Content, SnapshotConfig},
     utils::code::{calc_max_line_number_length, calc_wh, prepare_code},
 };
 
@@ -10,8 +10,7 @@ use super::snapshot_data::SnapshotData;
 const SPACE_BOTH_SIDE: usize = 2;
 
 pub struct ASCIISnapshot {
-    config: SnapshotConfig,
-    code: RawCode,
+    code: Code,
 }
 
 fn optional(component: String, is_view: bool) -> String {
@@ -30,9 +29,8 @@ impl ASCIISnapshot {
 
 impl ASCIISnapshot {
     pub fn from_config(config: SnapshotConfig) -> anyhow::Result<Self> {
-        match config.code {
-            Code::Raw(ref raw_code) => Ok(ASCIISnapshot {
-                config: config.clone(),
+        match config.content {
+            Content::Code(ref raw_code) => Ok(ASCIISnapshot {
                 code: raw_code.clone(),
             }),
             _ => Err(anyhow::anyhow!("The code content is not raw")),
@@ -52,9 +50,9 @@ impl ASCIISnapshot {
             .and_then(|x| Some(x.len()))
             .unwrap_or(0);
         let frame_width = max(width as usize, len + SPACE_BOTH_SIDE);
-        let frame_width = match self.code.line_number {
-            Some(ref line_number) => {
-                frame_width + SPACE_BOTH_SIDE + calc_line_number_width(line_number.start_number)
+        let frame_width = match self.code.start_line_number {
+            Some(start_line_number) => {
+                frame_width + SPACE_BOTH_SIDE + calc_line_number_width(start_line_number)
             }
             None => frame_width,
         };
@@ -68,11 +66,11 @@ impl ASCIISnapshot {
             .map(|(i, line)| {
                 format!(
                     "│ {:1$} │\n",
-                    match self.code.line_number {
-                        Some(ref line_number) => format!(
+                    match self.code.start_line_number {
+                        Some(ref start_line_number) => format!(
                             "{:1$} {line}",
-                            line_number.start_number as usize + i,
-                            calc_line_number_width(line_number.start_number),
+                            *start_line_number as usize + i,
+                            calc_line_number_width(*start_line_number),
                         ),
                         None => line.to_string(),
                     },
@@ -86,7 +84,7 @@ impl ASCIISnapshot {
                 "{}{line}",
                 text_line(&self.code.file_path.clone().unwrap_or(String::from("")))
             ),
-            self.code.breadcrumbs.is_some(),
+            self.code.has_breadcrumbs,
         );
 
         format!("{top_frame}{breadcrumbs}{code}{bottom_frame}")

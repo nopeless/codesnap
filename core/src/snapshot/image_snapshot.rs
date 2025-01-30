@@ -8,7 +8,7 @@ use crate::{
         interface::component::Component,
         layout::{column::Column, row::Row},
     },
-    config::{Border, CommandLine, RawCode, SnapshotConfig, DEFAULT_WINDOW_MARGIN},
+    config::{self, CommandLineContent, SnapshotConfig, DEFAULT_WINDOW_MARGIN},
     utils::{color::RgbaColor, theme_provider::ThemeProvider},
 };
 use tiny_skia::{Color, Pixmap};
@@ -99,20 +99,7 @@ impl ImageSnapshot {
                 theme_provider: theme_provider.clone(),
             };
             let background_padding = Padding::from(config.window.margin.clone());
-            let border_width = match config.window.border {
-                Some(_) => 1.,
-                None => 0.,
-            };
-            let border_rgba_color: RgbaColor = config
-                .window
-                .border
-                .clone()
-                .unwrap_or(Border {
-                    color: String::from("#ffffff30"),
-                })
-                .color
-                .as_str()
-                .into();
+            let border_rgba_color: RgbaColor = config.window.border.color.as_str().into();
 
             // If vertical background padding is less than 82., should hidden watermark component
             // If watermark text is equal to "", the watermark component is hidden
@@ -140,7 +127,7 @@ impl ImageSnapshot {
                             editor_background_color.into(),
                             DEFAULT_WINDOW_MIN_WIDTH,
                             window_padding.clone(),
-                            border_width,
+                            config.window.border.width,
                             border_rgba_color.into(),
                             parsed_render_content,
                         )
@@ -160,42 +147,39 @@ impl ImageSnapshot {
         })
     }
 
-    pub fn raw_code_content(
+    pub fn draw_code_content(
         window_padding: &Padding,
-        raw_code: &RawCode,
+        code_content: config::Code,
     ) -> Vec<Box<dyn Component>> {
-        let code_lines = raw_code.content.lines().collect::<Vec<&str>>();
+        let code_lines = code_content.content.lines().collect::<Vec<&str>>();
 
         vec![
-            Box::new(Breadcrumbs::from_path(
-                raw_code.file_path.clone(),
-                raw_code.breadcrumbs.clone(),
+            Box::new(Breadcrumbs::from(
+                code_content.has_breadcrumbs,
+                code_content.file_path.clone(),
             )),
             Box::new(CodeBlock::from_children(vec![
                 Box::new(HighlightCodeBlock::from(
-                    raw_code.highlight_lines.clone(),
+                    code_content.highlight_lines.clone(),
                     code_lines.len(),
                     LINE_HEIGHT,
                     window_padding.clone(),
                 )),
-                Box::new(LineNumber::new(raw_code.clone(), LINE_HEIGHT)),
-                Box::new(Code::new(raw_code.clone(), LINE_HEIGHT)),
+                Box::new(LineNumber::new(code_content.clone(), LINE_HEIGHT)),
+                Box::new(Code::new(code_content.clone(), LINE_HEIGHT)),
             ])),
         ]
     }
 
     pub fn command_line_content(
-        config: SnapshotConfig,
-        window_padding: Padding,
-        command_line: &CommandLine,
+        command_line_content: Vec<CommandLineContent>,
     ) -> Vec<Box<dyn Component>> {
-        command_line
+        command_line_content
             .clone()
-            .output
             .into_iter()
             .map(|output| {
                 Box::new(Column::from_children(vec![
-                    Box::new(CommandLineHeader::from(&command_line, &output.full_command)),
+                    Box::new(CommandLineHeader::from(&output.full_command)),
                     Box::new(CommandLineOutput::from(&output.content)),
                 ])) as Box<dyn Component>
             })
@@ -215,15 +199,14 @@ impl ImageSnapshot {
 
         let drawer =
             Self::create_drawer_with_frame(config.clone(), theme_provider, window_padding.clone());
-        let pixmap =
-            match config.code {
-                crate::config::Code::Raw(ref raw_code) => {
-                    drawer(Self::raw_code_content(&window_padding, raw_code))
-                }
-                crate::config::Code::Command(ref command_line) => drawer(
-                    Self::command_line_content(config.clone(), window_padding, command_line),
-                ),
-            }?;
+        let pixmap = match config.content {
+            crate::config::Content::Code(code) => {
+                drawer(Self::draw_code_content(&window_padding, code))
+            }
+            crate::config::Content::CommandOutput(command_line_content) => {
+                drawer(Self::command_line_content(command_line_content))
+            }
+        }?;
 
         Ok(Self { pixmap })
     }

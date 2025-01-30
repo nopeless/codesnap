@@ -1,5 +1,5 @@
 use crate::components::interface::{
-    component::Component,
+    component::{Component, ComponentContext},
     style::{ComponentAlign, RawComponentStyle, Style},
 };
 
@@ -12,7 +12,7 @@ impl Component for Column {
         &self.children
     }
 
-    fn style(&self) -> RawComponentStyle {
+    fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
         Style::default().align(ComponentAlign::Column)
     }
 }

@@ -1,5 +1,5 @@
 use super::interface::{
-    component::Component,
+    component::{Component, ComponentContext},
     style::{RawComponentStyle, Size, Style},
 };
 
@@ -12,7 +12,7 @@ impl Component for CodeBlock {
         &self.children
     }
 
-    fn style(&self) -> RawComponentStyle {
+    fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
         Style::default().size(Size::Inherit, Size::Dynamic)
     }
 }

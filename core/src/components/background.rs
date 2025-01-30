@@ -31,13 +31,13 @@ impl Component for Background {
         &self.children
     }
 
-    fn style(&self) -> RawComponentStyle {
+    fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
         RawComponentStyle::default()
             .align(ComponentAlign::Column)
             .padding(self.padding.clone())
     }
 
-    fn self_render_condition(&self) -> bool {
+    fn self_render_condition(&self, _context: &ComponentContext) -> bool {
         Self::has_background(&self.padding)
     }
 

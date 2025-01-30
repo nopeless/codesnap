@@ -264,7 +264,7 @@ pub struct CodeConfig {
     /// The code snapshot is different from normal screenshots, it should provide more information
     /// about the code, such as the file path, the line number and highlight code line, these
     /// information can help users to understand the code better.
-    #[builder(setter(into, strip_option), default = Breadcrumbs::default())]
+    #[builder(setter(into, strip_option), default = BreadcrumbsBuilder::default().build().unwrap())]
     #[serde(default)]
     pub breadcrumbs: Breadcrumbs,
 }

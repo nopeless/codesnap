@@ -11,7 +11,7 @@ use crate::{
 };
 
 use super::interface::{
-    component::Component,
+    component::{Component, ComponentContext},
     style::{ComponentStyle, RawComponentStyle, Size},
 };
 
@@ -19,8 +19,8 @@ const LINE_HEIGHT: f32 = 15.;
 
 pub struct Breadcrumbs {
     children: Vec<Box<dyn Component>>,
+    has_breadcrumbs: bool,
     path: Option<String>,
-    config: Option<config::Breadcrumbs>,
 }
 
 impl Component for Breadcrumbs {
@@ -28,24 +28,30 @@ impl Component for Breadcrumbs {
         &self.children
     }
 
-    fn render_condition(&self) -> bool {
-        self.config.is_some()
+    fn render_condition(&self, _context: &ComponentContext) -> bool {
+        self.has_breadcrumbs
     }
 
-    fn style(&self) -> RawComponentStyle {
+    fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
         let style = RawComponentStyle::default();
 
-        if self.config.is_some() {
-            if let Some(path) = &self.path {
-                let (w, h) = calc_wh_with_min_width(&path, 8., LINE_HEIGHT);
-
-                return style
-                    .size(Size::Num(w), Size::Num(h))
-                    .margin(Margin::default());
-            }
+        if !self.has_breadcrumbs {
+            return style;
         }
 
-        style
+        self.path
+            .as_ref()
+            .and_then(|path| {
+                let (w, h) = calc_wh_with_min_width(&path, 8., LINE_HEIGHT);
+
+                return Some(
+                    style
+                        .clone()
+                        .size(Size::Num(w), Size::Num(h))
+                        .margin(Margin::default()),
+                );
+            })
+            .unwrap_or(style)
     }
 
     fn draw_self(
@@ -56,19 +62,22 @@ impl Component for Breadcrumbs {
         style: &super::interface::style::ComponentStyle,
         _parent_style: &ComponentStyle,
     ) -> super::interface::render_error::Result<()> {
-        let config = self.config.clone().unwrap();
+        let config = context.take_snapshot_params.code_config.breadcrumbs.clone();
 
         if let Some(ref path) = self.path {
-            let path = config
-                .separator
-                .and_then(|separator| Some(parse_separator(path, &separator)))
-                .unwrap_or(path.clone());
+            let path = parse_separator(
+                path,
+                &context
+                    .take_snapshot_params
+                    .code_config
+                    .breadcrumbs
+                    .separator,
+            );
             let color: RgbaColor = config.color.as_str().into();
             let attrs = Attrs::new().color(color.into());
-            let attrs = match config.font_family {
-                Some(ref font_family) => attrs.family(Family::Name(font_family)),
-                None => attrs,
-            };
+            let attrs = attrs.family(Family::Name(
+                &context.take_snapshot_params.code_config.font_family,
+            ));
 
             FontRenderer::new(
                 12.,
@@ -91,14 +100,11 @@ impl Component for Breadcrumbs {
 }
 
 impl Breadcrumbs {
-    pub fn from_path(
-        file_path: Option<String>,
-        config: Option<config::Breadcrumbs>,
-    ) -> Breadcrumbs {
+    pub fn from(has_breadcrumbs: bool, file_path: Option<String>) -> Breadcrumbs {
         Breadcrumbs {
             children: vec![],
             path: file_path,
-            config,
+            has_breadcrumbs,
         }
     }
 }

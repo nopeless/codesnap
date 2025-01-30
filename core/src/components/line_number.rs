@@ -4,7 +4,7 @@ use super::interface::{
     style::{ComponentStyle, RawComponentStyle, Size, Style},
 };
 use crate::{
-    config::RawCode,
+    config::Code,
     edges::margin::Margin,
     utils::{
         code::CHAR_WIDTH,
@@ -22,11 +22,10 @@ pub struct LineNumber {
     render_condition: bool,
     line_number_content: Vec<String>,
     number_of_digit: usize,
-    raw_code: RawCode,
 }
 
 impl Component for LineNumber {
-    fn render_condition(&self) -> bool {
+    fn render_condition(&self, _context: &ComponentContext) -> bool {
         return self.render_condition;
     }
 
@@ -34,7 +33,7 @@ impl Component for LineNumber {
         &self.children
     }
 
-    fn style(&self) -> RawComponentStyle {
+    fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
         Style::default()
             .size(
                 Size::Num(CHAR_WIDTH * self.number_of_digit as f32),
@@ -69,7 +68,9 @@ impl Component for LineNumber {
                 &self.line_number_content.join("\n"),
                 Attrs::new()
                     .color(Color::rgb(73, 81, 98))
-                    .family(Family::Name(&self.raw_code.font_family)),
+                    .family(Family::Name(
+                        &context.take_snapshot_params.code_config.font_family,
+                    )),
             )],
             pixmap,
         );
@@ -79,17 +80,16 @@ impl Component for LineNumber {
 }
 
 impl LineNumber {
-    pub fn new(raw_code: RawCode, line_height: f32) -> LineNumber {
-        match raw_code.line_number {
+    pub fn new(code_content: Code, line_height: f32) -> LineNumber {
+        match code_content.start_line_number {
             None => LineNumber::default(),
-            Some(ref line_number) => {
-                let lines = raw_code.content.split("\n").collect::<Vec<&str>>();
-                let start_line_number = line_number.start_number;
+            Some(ref start_line_number) => {
+                let lines = code_content.content.split("\n").collect::<Vec<&str>>();
                 let max_line_number = lines.len() as u32 + start_line_number;
                 let number_of_digit = (max_line_number - 1).to_string().len();
 
                 LineNumber {
-                    line_number_content: (start_line_number..max_line_number)
+                    line_number_content: (*start_line_number..max_line_number)
                         .map(|line_number| {
                             format!(
                                 "{:>width$}",
@@ -102,7 +102,6 @@ impl LineNumber {
                     children: vec![],
                     render_condition: true,
                     line_height,
-                    raw_code,
                 }
             }
         }

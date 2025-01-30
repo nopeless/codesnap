@@ -1,4 +1,4 @@
-use cosmic_text::{Attrs, Color, Family, Weight};
+use cosmic_text::{Attrs, Family, Weight};
 
 use crate::{
     components::interface::{
@@ -6,7 +6,6 @@ use crate::{
         render_error,
         style::{ComponentStyle, RawComponentStyle, Size, Style},
     },
-    config::CommandLine,
     utils::{
         code::calc_wh_with_min_width,
         color::parse_hex_to_cosmic_color,
@@ -16,11 +15,7 @@ use crate::{
 
 pub struct CommandLineHeader {
     children: Vec<Box<dyn Component>>,
-    prompt: String,
-    prompt_color: Color,
-    command_color: Color,
-    command: String,
-    args: String,
+    full_command: String,
 }
 
 const CASKAYDIA_COVE_NERD_FONT: &[u8] =
@@ -32,8 +27,11 @@ impl Component for CommandLineHeader {
         &self.children
     }
 
-    fn style(&self) -> RawComponentStyle {
-        let parsed_line = format!("{}{}", self.prompt, self.command);
+    fn style(&self, context: &ComponentContext) -> RawComponentStyle {
+        let parsed_line = format!(
+            "{} {}",
+            context.take_snapshot_params.command_output_config.prompt, self.full_command
+        );
         let (w, h) = calc_wh_with_min_width(parsed_line.as_str(), FONT_SIZE / 2., 20.);
 
         Style::default().size(Size::Num(w), Size::Num(h))
@@ -47,23 +45,28 @@ impl Component for CommandLineHeader {
         style: &ComponentStyle,
         _parent_style: &ComponentStyle,
     ) -> render_error::Result<()> {
-        let foreground_color = context.theme_provider.theme.settings.foreground.unwrap();
+        // let foreground_color = context.theme_provider.theme.settings.foreground.unwrap();
         let attr = Attrs::new().family(Family::Name("Caskaydia Cove Nerd Font"));
+        let command_config = context.take_snapshot_params.command_output_config.clone();
         let spans = vec![
-            (self.prompt.as_str(), attr.color(self.prompt_color)),
             (
-                self.command.as_str(),
-                attr.color(self.command_color).weight(Weight::BOLD),
+                command_config.prompt.as_str(),
+                attr.color(parse_hex_to_cosmic_color(&command_config.prompt_color)),
             ),
             (
-                self.args.as_str(),
-                attr.color(Color::rgba(
-                    foreground_color.r,
-                    foreground_color.g,
-                    foreground_color.b,
-                    foreground_color.a,
-                )),
+                self.full_command.as_str(),
+                attr.color(parse_hex_to_cosmic_color(&command_config.command_color))
+                    .weight(Weight::BOLD),
             ),
+            // (
+            //     self.args.as_str(),
+            //     attr.color(Color::rgba(
+            //         foreground_color.r,
+            //         foreground_color.g,
+            //         foreground_color.b,
+            //         foreground_color.a,
+            //     )),
+            // ),
         ];
 
         FontRenderer::new(
@@ -89,16 +92,10 @@ impl Component for CommandLineHeader {
 }
 
 impl CommandLineHeader {
-    pub fn from(command_line: &CommandLine, command: &str) -> CommandLineHeader {
-        let command = command.split_whitespace().collect::<Vec<&str>>();
-
+    pub fn from(full_command: &str) -> CommandLineHeader {
         CommandLineHeader {
-            prompt: format!("{} ", command_line.prompt),
-            command: format!("{} ", command[0]),
-            prompt_color: parse_hex_to_cosmic_color(&command_line.prompt_color),
-            command_color: parse_hex_to_cosmic_color(&command_line.command_color),
+            full_command: full_command.to_string(),
             children: vec![],
-            args: command[1..].join(" "),
         }
     }
 }

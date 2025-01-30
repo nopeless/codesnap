@@ -1,7 +1,7 @@
 use crate::{
     ansi::ANSI,
     components::interface::{
-        component::{self, Component},
+        component::{self, Component, ComponentContext},
         render_error,
         style::{self, RawComponentStyle, Size, Style},
     },
@@ -25,7 +25,7 @@ impl Component for CommandLineOutput {
         &self.children
     }
 
-    fn style(&self) -> RawComponentStyle {
+    fn style(&self, _context: &ComponentContext) -> RawComponentStyle {
         let (w, h) = calc_wh_with_min_width(&self.ansi_text, FONT_SIZE / 2., 20.);
 
         Style::default().size(Size::Num(w), Size::Num(h))
