@@ -132,27 +132,35 @@ Or if you are using CLI tool, CodeSnap will generate a default config file for y
 ```jsonc
 // Both "CaskaydiaCove Nerd Font" and "Pacifico" is pre-installed in CodeSnap, you can use them out of the box
 {
+  "theme": "candy",
   "window": {
     "mac_window_bar": true,
-    "shadow": 20,
+    "shadow": {
+      "radius": 20,
+      "color": "#00000040"
+    },
     "margin": {
       "x": 82,
       "y": 82
+    },
+    "border": {
+      "width": 1,
+      "color": "#ffffff30"
     }
   },
-  "code": {
+  "code_config": {
     "font_family": "CaskaydiaCove Nerd Font",
-    // CodeSnap use candy theme by default, if you want to use other theme, please refer https://github.com/trishume/syntect
-    "theme": "candy"
+    "breadcrumbs": {
+      "separator": "/",
+      "color": "#80848b",
+      "font_family": "CaskaydiaCove Nerd Font"
+    }
   },
   "watermark": {
     "content": "CodeSnap",
     "font_family": "Pacifico",
     "color": "#ffffff"
   },
-  // If you want to use gradient color, you can provide stops like the following config
-  // But if you want to use solid color, you can just provide a color string like: 
-  // "background": "#6bcba5"
   "background": {
     "start": {
       "x": 0,
