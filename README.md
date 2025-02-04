@@ -73,6 +73,11 @@ nix-env -i codesnap
 cargo install codesnap-cli
 ```
 
+Or install via precompiled binary:
+```bash
+cargo binstall codesnap-cli
+```
+
 </details>
 
 <details>
