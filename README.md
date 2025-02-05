@@ -110,13 +110,13 @@ Use `CodeSnap` builder to generate code snapshot:
 
 ```rust
 let code_content = Content::Code(
-  CodeBuilder::default()
+  CodeBuilder::from_t
   .content(r#"print "Hello, World!""#)
   .language("python")
   .build()?,
 );
 
-let snapshot = CodeSnap::default()
+let snapshot = CodeSnap::from_default_theme()
   .content(code_content)
   .build()?
   .create_snapshot()?;
