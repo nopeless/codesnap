@@ -109,15 +109,24 @@ cargo add codesnap
 Use `CodeSnap` builder to generate code snapshot:
 
 ```rust
-CodeSnap::default()
-        .code("fn main() { println!(\"Hello, world!\"); }")
-        .watermark(WatermarkBuilder::default().content("CodeSnap").build()?)
-        .build()?
-        .create_snapshot()?.raw_data()?.copy()?;
+let code_content = Content::Code(
+  CodeBuilder::default()
+  .content(r#"print "Hello, World!""#)
+  .language("python")
+  .build()?,
+);
+
+let snapshot = CodeSnap::default()
+  .content(code_content)
+  .build()?
+  .create_snapshot()?;
+
+// Copy the snapshot data to the clipboard
+snapshot.raw_data()?.copy()
 ```
 
 ## 🌰 Examples
-All examples can be found in [examples](https://github.com/mistricky/CodeSnap/tree/main/examples).
+All examples can be found in [examples](https://github.com/mistricky/CodeSnap/tree/main/cli/examples).
 
 ![hello](https://github.com/user-attachments/assets/99df51ff-0957-40bd-91d0-facbd46a0bec)
 
