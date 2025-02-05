@@ -35,13 +35,13 @@ jobs:
       - name: Build and upload binaries
         uses: taiki-e/upload-rust-binary-action@v1
         with:
-          bin: codesnap-cli
+          bin: codesnap
           include: LICENSE,README.md
           target: ${{ matrix.target }}
           tar: unix
           zip: windows
           token: ${{ secrets.PAT }}
-          archive: $bin_$tag_$target
+          archive: $bin-cli_$tag_$target
 
   release-formula:
     needs: upload-assets
