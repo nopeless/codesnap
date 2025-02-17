@@ -29,8 +29,22 @@ pub fn get_config_content() -> anyhow::Result<String> {
     let is_config_exists = config_path.try_exists()?;
 
     let content = if is_config_exists {
-        read_to_string(&config_path)
-    } else {
+        let existing_content = read_to_string(&config_path)?;
+        if existing_content.is_empty() {
+            // remove old config file, and create a new one with default content
+            fs::remove_file(&config_path)?;
+            create_dir_all(&codesnap_home_path)?;
+            fs::write(&config_path, DEFAULT_CONFIG_CONTENT)?;
+            
+            logger::info(&format!(
+                "Automated created config file at {:?}",
+                &config_path
+            ));
+            Ok::<String, anyhow::Error>(DEFAULT_CONFIG_CONTENT.to_string())
+        } else {
+            Ok(existing_content)
+        }
+    }  else {
         create_dir_all(&codesnap_home_path)?;
         fs::write(&config_path, DEFAULT_CONFIG_CONTENT)?;
 
