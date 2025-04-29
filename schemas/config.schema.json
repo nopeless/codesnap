@@ -1,0 +1,449 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SnapshotConfig",
+  "type": "object",
+  "required": [
+    "background",
+    "code_config",
+    "command_output_config",
+    "content",
+    "fonts_folders",
+    "line_number_color",
+    "theme",
+    "themes_folders",
+    "window"
+  ],
+  "properties": {
+    "background": {
+      "$ref": "#/definitions/Background"
+    },
+    "code_config": {
+      "$ref": "#/definitions/CodeConfig"
+    },
+    "command_output_config": {
+      "description": "The code to be displayed in the snapshot",
+      "allOf": [
+        {
+          "$ref": "#/definitions/CommandOutputConfig"
+        }
+      ]
+    },
+    "content": {
+      "$ref": "#/definitions/Content"
+    },
+    "fonts_folders": {
+      "description": "Load fonts from the fonts_folders to render the code, CodeSnap use fonts which you have installed on your system by default, but you can still provide `fonts_folders` to tell CodeSnap to load extra fonts from the folder.\n\nThis config is useful when you want to develop a tool based on CodeSnap, you can package some fonts with your tool and publish, so that users can use these fonts without installing them manually on their system.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "line_number_color": {
+      "type": "string"
+    },
+    "scale_factor": {
+      "description": "CodeSnap default generate triple size snapshot image, you can use this config to change the scale factor.",
+      "default": 3,
+      "type": "integer",
+      "format": "uint8",
+      "minimum": 0.0
+    },
+    "theme": {
+      "description": "CodeSnap use Syntect as the syntax highlighting engine, you can provide a custom theme for code highlighting and background. The theme is load from the `themes_folders`(if not provided, CodeSnap load the default themes), you can use the theme name to specify the theme you want to use.\n\nSee `themes_folders` config for more detail.",
+      "type": "string"
+    },
+    "themes_folders": {
+      "description": "CodeSnap use Syntect as the syntax highlighting engine, you can provide a custom theme for the snapshot. If the `themes_folders` is provided, CodeSnap will load the theme from the folder, otherwise, CodeSnap will load the default themes.\n\nVisit https://github.com/trishume/syntect for more detail",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "title": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "watermark": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Watermark"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "window": {
+      "$ref": "#/definitions/Window"
+    }
+  },
+  "definitions": {
+    "Background": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/definitions/LinearGradient"
+        }
+      ]
+    },
+    "Border": {
+      "type": "object",
+      "required": [
+        "color",
+        "width"
+      ],
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "width": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "Breadcrumbs": {
+      "type": "object",
+      "required": [
+        "color",
+        "font_family",
+        "separator"
+      ],
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "font_family": {
+          "type": "string"
+        },
+        "separator": {
+          "type": "string"
+        }
+      }
+    },
+    "Code": {
+      "type": "object",
+      "required": [
+        "content",
+        "has_breadcrumbs"
+      ],
+      "properties": {
+        "content": {
+          "type": "string"
+        },
+        "file_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "has_breadcrumbs": {
+          "type": "boolean"
+        },
+        "highlight_lines": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/HighlightLine"
+          }
+        },
+        "language": {
+          "description": "The `language` will be used to determine the syntax highlighting to use for generating the snapshot.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "start_line_number": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0.0
+        }
+      }
+    },
+    "CodeConfig": {
+      "type": "object",
+      "required": [
+        "font_family"
+      ],
+      "properties": {
+        "breadcrumbs": {
+          "description": "Breadcrumbs is a useful and unique feature of CodeSnap, it can help users to understand the code location in the project. If the `has_breadcrumbs` is true, CodeSnap will display the `file_path` on top of the code.\n\nThe code snapshot is different from normal screenshots, it should provide more information about the code, such as the file path, the line number and highlight code line, these information can help users to understand the code better.",
+          "default": {
+            "color": "",
+            "font_family": "",
+            "separator": ""
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/Breadcrumbs"
+            }
+          ]
+        },
+        "font_family": {
+          "type": "string"
+        }
+      }
+    },
+    "CommandLineContent": {
+      "type": "object",
+      "required": [
+        "content",
+        "full_command"
+      ],
+      "properties": {
+        "content": {
+          "type": "string"
+        },
+        "full_command": {
+          "type": "string"
+        }
+      }
+    },
+    "CommandOutputConfig": {
+      "type": "object",
+      "required": [
+        "command_color",
+        "font_family",
+        "prompt",
+        "prompt_color",
+        "string_arg_color"
+      ],
+      "properties": {
+        "command_color": {
+          "type": "string"
+        },
+        "font_family": {
+          "type": "string"
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "prompt_color": {
+          "type": "string"
+        },
+        "string_arg_color": {
+          "type": "string"
+        }
+      }
+    },
+    "Content": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Code"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CommandLineContent"
+          }
+        }
+      ]
+    },
+    "DimensionValue": {
+      "anyOf": [
+        {
+          "type": "number",
+          "format": "float"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "HighlightLine": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": [
+            {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "maxItems": 2,
+          "minItems": 2
+        },
+        {
+          "type": "array",
+          "items": [
+            {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0.0
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "maxItems": 3,
+          "minItems": 3
+        }
+      ]
+    },
+    "LinearGradient": {
+      "type": "object",
+      "required": [
+        "end",
+        "start",
+        "stops"
+      ],
+      "properties": {
+        "end": {
+          "$ref": "#/definitions/Point_for_DimensionValue"
+        },
+        "start": {
+          "$ref": "#/definitions/Point_for_DimensionValue"
+        },
+        "stops": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LinearGradientStop"
+          }
+        }
+      }
+    },
+    "LinearGradientStop": {
+      "type": "object",
+      "required": [
+        "color",
+        "position"
+      ],
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "position": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "Margin": {
+      "type": "object",
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "format": "float"
+        },
+        "y": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "Point_for_DimensionValue": {
+      "type": "object",
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "$ref": "#/definitions/DimensionValue"
+        },
+        "y": {
+          "$ref": "#/definitions/DimensionValue"
+        }
+      }
+    },
+    "Shadow": {
+      "type": "object",
+      "required": [
+        "color",
+        "radius"
+      ],
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "radius": {
+          "type": "number",
+          "format": "float"
+        }
+      }
+    },
+    "TitleConfig": {
+      "type": "object",
+      "required": [
+        "color",
+        "font_family"
+      ],
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "font_family": {
+          "type": "string"
+        }
+      }
+    },
+    "Watermark": {
+      "description": "Draw a watermark below the code, you can use this to add a logo or any other text The watermark is designed as a place for users to provide personalize label",
+      "type": "object",
+      "required": [
+        "color",
+        "content",
+        "font_family"
+      ],
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "font_family": {
+          "type": "string"
+        }
+      }
+    },
+    "Window": {
+      "type": "object",
+      "required": [
+        "border",
+        "mac_window_bar",
+        "margin",
+        "shadow",
+        "title_config"
+      ],
+      "properties": {
+        "border": {
+          "$ref": "#/definitions/Border"
+        },
+        "mac_window_bar": {
+          "type": "boolean"
+        },
+        "margin": {
+          "$ref": "#/definitions/Margin"
+        },
+        "shadow": {
+          "$ref": "#/definitions/Shadow"
+        },
+        "title_config": {
+          "$ref": "#/definitions/TitleConfig"
+        }
+      }
+    }
+  }
+}
