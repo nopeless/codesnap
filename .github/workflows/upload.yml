@@ -37,6 +37,12 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v4
 
+      - name: Install openssl
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev
+
       - name: Build and upload binaries
         uses: taiki-e/upload-rust-binary-action@v1
         with:
@@ -54,12 +60,6 @@ jobs:
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v4
-
-      - name: Install openssl
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libssl-dev
 
       - name: Update codesnap formula
         uses: peter-evans/repository-dispatch@v3
