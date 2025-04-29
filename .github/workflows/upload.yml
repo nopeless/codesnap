@@ -1,13 +1,8 @@
 name: Upload binaries to GitHub releases
 
-# on:
-#   release:
-#     types: [created]
-
 on:
-  push:
-    tags:
-      - "v*"
+  release:
+    types: [created]
 
 permissions:
   contents: write
