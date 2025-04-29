@@ -92,7 +92,7 @@ jobs:
 
             **Homebrew**
             ```bash
-            brew install mistricky/tap/CodeSnap
+            brew install codesnap 
             ```
 
             Of course, you can install CodeSnap manually by downloading the following binaries.
