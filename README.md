@@ -84,7 +84,7 @@ cargo binstall codesnap-cli
 <summary>Homebrew</summary>
 
 ```bash
-brew install mistricky/tap/CodeSnap
+brew install codesnap
 ```
 
 </details>
