@@ -47,7 +47,7 @@ jobs:
           zip: windows
           token: ${{ secrets.PAT }}
           archive: $bin-cli_$tag_$target
-          build-tool: cargo
+          build-tool: cross
 
   release-formula:
     needs: upload-assets
