@@ -5,7 +5,9 @@ name: Upload binaries to GitHub releases
 #     types: [created]
 
 on:
-  push
+  push:
+    tags:
+      - "v*"
 
 permissions:
   contents: write
