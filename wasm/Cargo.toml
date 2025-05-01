@@ -1,11 +1,11 @@
 [package]
 name = "codesnap-wasm"
-version = "0.1.0"
-authors = ["mist.zzh@gmail.com"]
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
 description = "CodeSnap WASM portal"
 license = "MIT"
 repository = "https://github.com/mistricky/CodeSnap"
-edition = "2021"
 
 [lib]
 crate-type = ["cdylib"]

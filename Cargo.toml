@@ -1,4 +1,10 @@
 [workspace]
 resolver = "2"
 
+[workspace.package]
+version = "0.11.6"
+edition = "2021"
+authors = ["mist.zzh@gmail.com"]
+
+
 members = ["cli", "core", "wasm", "xtask"]
