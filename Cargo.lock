@@ -394,7 +394,7 @@ dependencies = [
 
 [[package]]
 name = "codesnap"
-version = "0.11.5"
+version = "0.11.6"
 dependencies = [
  "ansi_term",
  "anyhow",
@@ -425,7 +425,7 @@ dependencies = [
 
 [[package]]
 name = "codesnap-cli"
-version = "0.11.5"
+version = "0.11.6"
 dependencies = [
  "ansi_term",
  "anyhow",
@@ -445,7 +445,7 @@ dependencies = [
 
 [[package]]
 name = "codesnap-wasm"
-version = "0.1.0"
+version = "0.11.6"
 dependencies = [
  "codesnap",
  "console_error_panic_hook",
