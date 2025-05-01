@@ -3,8 +3,7 @@ name: Release CodeSnap to crates.io
 on:
   push:
     paths:
-      - core/Cargo.toml
-      - lib/Cargo.toml
+      - Cargo.toml
     branches:
       - main
 
