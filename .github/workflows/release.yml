@@ -21,8 +21,8 @@ jobs:
         id: read_toml
         uses: SebRollen/toml-action@v1.2.0
         with:
-          file: core/Cargo.toml
-          field: package.version
+          file: Cargo.toml
+          field: workspace.package.version
 
       - uses: actions-rs/cargo@v1
         with:
