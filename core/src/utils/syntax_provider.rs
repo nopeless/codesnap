@@ -1,3 +1,4 @@
+#[cfg(feature = "auto-detect")]
 use hyperpolyglot::detectors::classify;
 use syntect::parsing::{SyntaxReference, SyntaxSet};
 
@@ -23,12 +24,15 @@ impl SyntaxProvider {
                     .map_err(|_| RenderError::NoSuchFile(file_path.clone()))?,
                 None => self.syntax_set.find_syntax_by_first_line(code),
             },
-        }
-        .or_else(|| {
+        };
+
+        #[cfg(feature = "auto-detect")]
+        let syntax = syntax.or_else(|| {
             self.syntax_set
                 .find_syntax_by_token(classify(code, &*vec![]))
-        })
-        .unwrap_or_else(|| self.syntax_set.find_syntax_plain_text());
+        });
+
+        let syntax = syntax.unwrap_or_else(|| self.syntax_set.find_syntax_plain_text());
 
         Ok(syntax.to_owned())
     }
