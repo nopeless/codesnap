@@ -1,5 +1,5 @@
 #[cfg(feature = "auto-detect")]
-use hyperpolyglot::detectors::classify;
+use hyperpolyglot_fork::detectors::classify;
 use syntect::parsing::{SyntaxReference, SyntaxSet};
 
 use crate::components::interface::render_error::RenderError;

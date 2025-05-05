@@ -367,15 +367,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "circular-queue"
-version = "0.2.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2df8276ab95fe8665a814190345239d91105df5df0fda26ddc7784c96244dc76"
-dependencies = [
- "version_check",
-]
-
-[[package]]
 name = "clap"
 version = "2.34.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -441,7 +432,7 @@ dependencies = [
 
 [[package]]
 name = "codesnap"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "ansi_term",
  "anyhow",
@@ -452,7 +443,7 @@ dependencies = [
  "chrono",
  "cosmic-text",
  "derive_builder",
- "hyperpolyglot",
+ "hyperpolyglot_fork",
  "include_dir",
  "lazy_static",
  "mime_guess",
@@ -473,7 +464,7 @@ dependencies = [
 
 [[package]]
 name = "codesnap-cli"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "ansi_term",
  "anyhow",
@@ -493,7 +484,7 @@ dependencies = [
 
 [[package]]
 name = "codesnap-wasm"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "codesnap",
  "console_error_panic_hook",
@@ -1138,9 +1129,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "hyperpolyglot"
+name = "hyperpolyglot_fork"
 version = "0.1.7"
-source = "git+https://github.com/codesnap-rs/hyperpolyglot?branch=master#cf796085492e97454064fa1fc8348db64a85360e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d1d8c20a4a202af1be2f8b5524f226b32e8876e2058502a7006fc8666162de8"
 dependencies = [
  "clap 2.34.0",
  "ignore",
@@ -1930,10 +1922,8 @@ dependencies = [
 [[package]]
 name = "polyglot_tokenizer"
 version = "0.2.1"
-source = "git+https://github.com/codesnap-rs/hyperpolyglot?branch=master#cf796085492e97454064fa1fc8348db64a85360e"
-dependencies = [
- "circular-queue",
-]
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d6091586d3c58239b154276ca7d7a14035605b829a27b92dbe10625e78ef909d"
 
 [[package]]
 name = "portable-atomic"
@@ -3648,7 +3638,7 @@ checksum = "ec107c4503ea0b4a98ef47356329af139c0a4f7750e621cf2973cd3385ebcb3d"
 
 [[package]]
 name = "xtask"
-version = "0.12.0"
+version = "0.12.1"
 dependencies = [
  "clap 4.5.37",
  "codesnap",
