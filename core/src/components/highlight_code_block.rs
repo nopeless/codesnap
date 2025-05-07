@@ -1,9 +1,4 @@
-use crate::{
-    config::HighlightLine,
-    edges::{edge::Edge, padding::Padding},
-    snapshot::image_snapshot::DEFAULT_WINDOW_MIN_WIDTH,
-    utils::{code::min_width, color::RgbaColor},
-};
+use crate::{config::HighlightLine, edges::padding::Padding, utils::color::RgbaColor};
 
 use super::{
     editor::code::CODE_LINE_HEIGHT,
