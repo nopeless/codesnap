@@ -432,7 +432,7 @@ dependencies = [
 
 [[package]]
 name = "codesnap"
-version = "0.12.2"
+version = "0.12.3"
 dependencies = [
  "ansi_term",
  "anyhow",
@@ -464,7 +464,7 @@ dependencies = [
 
 [[package]]
 name = "codesnap-cli"
-version = "0.12.2"
+version = "0.12.3"
 dependencies = [
  "ansi_term",
  "anyhow",
@@ -484,7 +484,7 @@ dependencies = [
 
 [[package]]
 name = "codesnap-wasm"
-version = "0.12.2"
+version = "0.12.3"
 dependencies = [
  "codesnap",
  "console_error_panic_hook",
@@ -3638,7 +3638,7 @@ checksum = "ec107c4503ea0b4a98ef47356329af139c0a4f7750e621cf2973cd3385ebcb3d"
 
 [[package]]
 name = "xtask"
-version = "0.12.2"
+version = "0.12.3"
 dependencies = [
  "clap 4.5.37",
  "codesnap",
