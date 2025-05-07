@@ -110,12 +110,16 @@
       "type": "object",
       "required": [
         "color",
+        "enable",
         "font_family",
         "separator"
       ],
       "properties": {
         "color": {
           "type": "string"
+        },
+        "enable": {
+          "type": "boolean"
         },
         "font_family": {
           "type": "string"
@@ -128,8 +132,7 @@
     "Code": {
       "type": "object",
       "required": [
-        "content",
-        "has_breadcrumbs"
+        "content"
       ],
       "properties": {
         "content": {
@@ -140,9 +143,6 @@
             "string",
             "null"
           ]
-        },
-        "has_breadcrumbs": {
-          "type": "boolean"
         },
         "highlight_lines": {
           "default": [],
@@ -178,6 +178,7 @@
           "description": "Breadcrumbs is a useful and unique feature of CodeSnap, it can help users to understand the code location in the project. If the `has_breadcrumbs` is true, CodeSnap will display the `file_path` on top of the code.\n\nThe code snapshot is different from normal screenshots, it should provide more information about the code, such as the file path, the line number and highlight code line, these information can help users to understand the code better.",
           "default": {
             "color": "",
+            "enable": false,
             "font_family": "",
             "separator": ""
           },
