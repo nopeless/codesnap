@@ -11,8 +11,6 @@
 
 
 ## CodeSnap
-> [!WARNING]  
-> This project is still in early stage and may have some bugs
 
 CodeSnap is a pure Rust tool for generate beautiful code snapshots, it directly use graphic engine to generate snapshots, which means the entire process is just matter of computation and rendering, without need for network or something like browser-based rendering solution.
 
